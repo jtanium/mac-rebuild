@@ -39,12 +39,12 @@ Think of it as "Marie Kondo for your Mac" - if a setting or app doesn't spark jo
 ### Install via Homebrew (Recommended)
 
 ```bash
-# Method 1: Direct formula installation (most reliable)
-brew install https://raw.githubusercontent.com/jtanium/mac-rebuild/main/Formula/mac-rebuild.rb
-
-# Method 2: Using tap (now with correct repository name)
+# Method 1: Using tap (recommended)
 brew tap jtanium/mac-rebuild
 brew install mac-rebuild
+
+# Method 2: Direct tap installation
+brew install jtanium/mac-rebuild/mac-rebuild
 ```
 
 ### Alternative Installation (If Above Fails)
@@ -54,13 +54,15 @@ If you encounter authentication issues:
 ```bash
 # Force HTTPS and retry
 git config --global url."https://github.com/".insteadOf git@github.com:
-brew install https://raw.githubusercontent.com/jtanium/mac-rebuild/main/Formula/mac-rebuild.rb
+brew tap jtanium/mac-rebuild
+brew install mac-rebuild
 ```
 
 ### Verify Installation
 ```bash
-mac-rebuild --version
-mac-rebuild --help
+mac-rebuild --version    # Should show "Mac Rebuild v2.0.0"
+mac-rebuild plugins      # Should show 7 core plugins
+mac-rebuild --help       # Should mention modular plugin-based architecture
 ```
 
 ## ⚠️ IMPORTANT SAFETY WARNING
@@ -269,6 +271,264 @@ mac-rebuild restore /Volumes/USB/mac-backup
 - **Apple ID Protected:** Requires your Apple credentials to access
 - **Local Encryption:** macOS encrypts data before sending to iCloud
 - **No GitHub Issues:** No public repository concerns
+
+## 📋 Available Plugins
+
+Mac Rebuild v2.0 includes these core plugins out of the box:
+
+| Plugin | Priority | Description |
+|--------|----------|-------------|
+| **homebrew** | 10 | Manages Homebrew packages, casks, and taps |
+| **asdf** | 20 | Enhanced ASDF support with system dependencies |
+| **applications** | 30 | App Store applications and application inventories |
+| **vscode** | 40 | Visual Studio Code settings, extensions, and keybindings |
+| **jetbrains** | 45 | JetBrains IDE configurations, settings, and applications |
+| **dotfiles** | 50 | Important dotfiles and configuration files |
+| **ssh** | 60 | SSH keys and configuration (handle with care) |
+
+### 🔍 View Available Plugins
+```bash
+mac-rebuild plugins
+```
+
+Example output:
+```
+📦 homebrew (priority: 10) [enabled]
+     Manages Homebrew packages, casks, and taps
+
+📦 asdf (priority: 20) [enabled]  
+     Manages ASDF version manager with enhanced plugin and runtime handling
+
+📦 jetbrains (priority: 45) [enabled]
+     Manages JetBrains IDE configurations, settings, and applications
+```
+
+## 🔧 Plugin Development Guide
+
+### Creating Your First Plugin
+
+Want to add support for a new tool? Creating a plugin is simple! Here's how:
+
+#### 1. Create the Plugin File
+
+```bash
+# Create your plugin file
+touch lib/mac-rebuild/plugins/my_tool.sh
+chmod +x lib/mac-rebuild/plugins/my_tool.sh
+```
+
+#### 2. Basic Plugin Structure
+
+```bash
+#!/bin/bash
+
+# My Tool Plugin for Mac Rebuild
+# Add description of what your plugin does
+
+# Plugin metadata (required)
+my_tool_description() {
+    echo "Manages My Tool configuration and settings"
+}
+
+my_tool_priority() {
+    echo "30"  # Lower numbers execute first (10=high, 50=medium, 90=low)
+}
+
+# Detection (optional but recommended)
+my_tool_detect() {
+    # Return 0 if tool is installed, 1 if not
+    command -v my_tool &> /dev/null
+}
+
+# Backup function (required)
+my_tool_backup() {
+    log "Backing up My Tool configuration..."
+    
+    # Check if tool is installed
+    if ! my_tool_detect; then
+        echo "⚠️  My Tool not found, skipping..."
+        return 0
+    fi
+    
+    # Ask user if they want to backup this tool
+    if ask_yes_no "Found My Tool. Do you want to backup its configuration?" "y"; then
+        echo "INCLUDE_MY_TOOL:true" >> "$USER_PREFS"
+        
+        local backup_dir="$BACKUP_DIR/my_tool"
+        mkdir -p "$backup_dir"
+        
+        # Your backup logic here
+        cp "$HOME/.my_tool_config" "$backup_dir/" || handle_error "My Tool backup" "Could not backup config"
+        
+        echo "✅ My Tool configuration backed up"
+    else
+        echo "EXCLUDE_MY_TOOL:true" >> "$USER_PREFS"
+    fi
+}
+
+# Restore function (required)  
+my_tool_restore() {
+    # Check if this tool should be restored
+    if ! my_tool_should_restore; then
+        return 0
+    fi
+    
+    log "Restoring My Tool configuration..."
+    
+    local backup_dir="$BACKUP_DIR/my_tool"
+    
+    if [ ! -d "$backup_dir" ]; then
+        echo "⚠️  No My Tool backup found, skipping..."
+        return 0
+    fi
+    
+    # Install the tool if needed (via Homebrew)
+    if ! my_tool_detect; then
+        if command -v brew &> /dev/null; then
+            brew install my-tool || handle_error "My Tool installation" "Could not install via Homebrew"
+        fi
+    fi
+    
+    # Restore configuration
+    cp "$backup_dir/.my_tool_config" "$HOME/" || handle_error "My Tool restore" "Could not restore config"
+    
+    echo "✅ My Tool configuration restored"
+}
+
+# Helper function to check if restore should happen
+my_tool_should_restore() {
+    if [ -f "$USER_PREFS" ]; then
+        grep -q "INCLUDE_MY_TOOL:true" "$USER_PREFS" 2>/dev/null
+    else
+        # Default to true if no preferences file but backup exists
+        [ -d "$BACKUP_DIR/my_tool" ]
+    fi
+}
+```
+
+#### 3. Plugin Function Reference
+
+**Required Functions:**
+- `{plugin}_description()` - Brief description of what the plugin manages
+- `{plugin}_backup()` - Backup logic for your tool
+- `{plugin}_restore()` - Restore logic for your tool
+
+**Optional Functions:**
+- `{plugin}_priority()` - Execution order (default: 50)
+- `{plugin}_detect()` - Check if tool is installed
+- `{plugin}_init()` - Plugin initialization
+- `{plugin}_should_restore()` - Conditional restore logic
+
+**Available Utilities:**
+- `log "message"` - Green progress message
+- `warn "message"` - Yellow warning message  
+- `error "message"` - Red error message
+- `ask_yes_no "question" "default"` - Interactive prompt
+- `handle_error "context" "message"` - Error handling that continues execution
+
+**Available Variables:**
+- `$BACKUP_DIR` - Base backup directory
+- `$USER_PREFS` - User preferences file
+- `$HOME` - User home directory
+
+#### 4. Plugin Best Practices
+
+**Error Handling:**
+```bash
+# Always use error handling for critical operations
+cp "$source" "$dest" || handle_error "Plugin name" "Specific error message"
+
+# Check tool availability before using
+if command -v my_tool &> /dev/null; then
+    my_tool --export > "$backup_dir/export.json"
+fi
+```
+
+**User Interaction:**
+```bash
+# Ask before backing up potentially sensitive data
+if ask_yes_no "Backup My Tool API keys?" "n"; then
+    # Backup sensitive data
+fi
+```
+
+**Homebrew Integration:**
+```bash
+# Standard pattern for installing tools via Homebrew
+if ! command -v my_tool &> /dev/null; then
+    if command -v brew &> /dev/null; then
+        brew install my-tool || handle_error "Installation" "Could not install my-tool"
+    fi
+fi
+```
+
+#### 5. Advanced Plugin Examples
+
+**Application + Settings Plugin (like JetBrains):**
+```bash
+my_ide_backup() {
+    # 1. Detect installed applications
+    # 2. Map applications to Homebrew casks  
+    # 3. Save application list for restoration
+    # 4. Backup application settings
+}
+
+my_ide_restore() {
+    # 1. Install applications via Homebrew
+    # 2. Restore application settings
+}
+```
+
+**Version Manager Plugin (like ASDF):**
+```bash
+my_version_manager_backup() {
+    # 1. Backup tool lists
+    # 2. Backup current versions
+    # 3. Backup configuration files
+}
+
+my_version_manager_restore() {
+    # 1. Install version manager
+    # 2. Install system dependencies
+    # 3. Install tools and versions
+}
+```
+
+#### 6. Testing Your Plugin
+
+```bash
+# Test plugin loading
+mac-rebuild plugins
+
+# Test backup (dry run recommended)
+mac-rebuild backup
+
+# Test restore
+mac-rebuild restore /path/to/test/backup
+```
+
+#### 7. Contributing Your Plugin
+
+1. **Test thoroughly** on a non-critical machine
+2. **Document any dependencies** or special requirements
+3. **Follow naming conventions** (`tool_name.sh`)
+4. **Submit a pull request** with your plugin
+
+### 🎯 Plugin Ideas for Community
+
+Here are some plugin ideas the community could contribute:
+
+- **Docker**: Container images, volumes, networks
+- **Kubernetes**: Contexts, configs, helm charts  
+- **AWS CLI**: Profiles, configurations, credentials
+- **Terraform**: State files, provider configs
+- **Database Tools**: PostgreSQL, MySQL, Redis configs
+- **Design Tools**: Figma, Sketch preferences
+- **Communication**: Slack workspaces, Discord settings
+- **Browsers**: Chrome/Firefox bookmarks, extensions
+- **Terminal**: iTerm2, Warp, or Hyper configurations
+- **Security**: 1Password, Bitwarden configurations
+- **Note Taking**: Obsidian, Notion, Bear settings
 
 ## 🚀 What Gets Restored Automatically
 
