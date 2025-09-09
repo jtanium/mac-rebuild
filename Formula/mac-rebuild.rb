@@ -17,15 +17,28 @@ class MacRebuild < Formula
     <<~EOS
       Mac Rebuild has been installed!
 
-      To get started:
-        1. Run: mac-rebuild --help
-        2. For first-time setup: mac-rebuild init
-        3. To restore from backup: mac-rebuild restore <git-repo-url>
+      ⚠️  IMPORTANT: Create a Time Machine backup before using this tool!
+
+      Getting started:
+        1. mac-rebuild --help          # View all available commands
+        2. mac-rebuild backup          # Create backup with storage options
+        3. mac-rebuild restore <path>  # Restore from backup
 
       Examples:
+        # Create backup (interactive storage selection)
         mac-rebuild backup
-        mac-rebuild restore https://github.com/jtanium/mac-backup.git
-        mac-rebuild restore git@github.com:jtanium/mac-backup.git
+
+        # Restore from iCloud Drive
+        mac-rebuild restore ~/Library/Mobile\\ Documents/com~apple~CloudDocs/mac-backup
+
+        # Restore from other cloud storage
+        mac-rebuild restore ~/Dropbox/mac-backup
+        mac-rebuild restore /Volumes/USB/mac-backup
+
+      Fresh install workflow:
+        1. Install Homebrew + mac-rebuild
+        2. mac-rebuild restore <your-backup-path>
+        3. All apps, SSH keys, and settings restored!
     EOS
   end
 

@@ -2,6 +2,25 @@
 
 An intelligent Mac development environment backup and restore tool that solves the SSH key authentication problem for fresh installs.
 
+## 📦 Installation
+
+### Install via Homebrew (Recommended)
+
+```bash
+# Install directly from the tap
+brew install jtanium/mac-rebuild/mac-rebuild
+
+# Or add the tap first, then install
+brew tap jtanium/mac-rebuild
+brew install mac-rebuild
+```
+
+### Verify Installation
+```bash
+mac-rebuild --version
+mac-rebuild --help
+```
+
 ## ⚠️ IMPORTANT SAFETY WARNING
 
 **🛡️ ALWAYS CREATE A TIME MACHINE BACKUP FIRST!**
@@ -55,7 +74,7 @@ Before using Mac Rebuild, **you must create a full Time Machine backup** of your
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
 # 2. Install mac-rebuild  
-brew install mac-rebuild
+brew install jtanium/mac-rebuild/mac-rebuild
 
 # 3. Wait for iCloud to sync, then restore
 mac-rebuild restore ~/Library/Mobile\ Documents/com~apple~CloudDocs/mac-backup
@@ -75,7 +94,7 @@ mac-rebuild restore ~/Library/Mobile\ Documents/com~apple~CloudDocs/mac-backup
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
 # 2. Install mac-rebuild
-brew install mac-rebuild
+brew install jtanium/mac-rebuild/mac-rebuild
 
 # 3. Restore from cloud storage
 mac-rebuild restore ~/Dropbox/mac-backup
@@ -89,7 +108,7 @@ mac-rebuild restore ~/Google\ Drive/mac-backup
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
 # 2. Install mac-rebuild
-brew install mac-rebuild
+brew install jtanium/mac-rebuild/mac-rebuild
 
 # 3. Restore from public GitHub repo (no SSH needed)
 mac-rebuild restore https://github.com/yourusername/mac-backup.git
@@ -102,7 +121,7 @@ mac-rebuild restore https://github.com/yourusername/mac-backup.git
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
 # 2. Install mac-rebuild
-brew install mac-rebuild
+brew install jtanium/mac-rebuild/mac-rebuild
 
 # 3. Use bootstrap package (from USB/secure storage)
 cd bootstrap && mac-rebuild restore --bootstrap
@@ -188,7 +207,7 @@ mac-rebuild backup  # Choose option 1 (iCloud)
 
 # Then just 3 commands:
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-brew install mac-rebuild
+brew install jtanium/mac-rebuild/mac-rebuild
 mac-rebuild restore ~/Library/Mobile\ Documents/com~apple~CloudDocs/mac-backup
 
 # Everything restored: JetBrains IDEs, SSH keys, Slack, Brave, VS Code, etc.
