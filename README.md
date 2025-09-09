@@ -15,6 +15,19 @@ brew tap jtanium/mac-rebuild
 brew install mac-rebuild
 ```
 
+### Alternative Installation (If Above Fails)
+
+If you encounter authentication issues:
+
+```bash
+# Option 1: Install directly from raw formula URL
+brew install https://raw.githubusercontent.com/jtanium/mac-rebuild/main/Formula/mac-rebuild.rb
+
+# Option 2: Force HTTPS and retry
+git config --global url."https://github.com/".insteadOf git@github.com:
+brew install jtanium/mac-rebuild/mac-rebuild
+```
+
 ### Verify Installation
 ```bash
 mac-rebuild --version
