@@ -1,18 +1,21 @@
 #!/bin/bash
 
 # Mac Rebuild - Intelligent Mac development environment backup and restore tool
-# Version: 1.0.1
+# Version: 1.0.2
 
 set -e
 
-VERSION="1.0.1"
+VERSION="1.0.2"
 
 # Determine library directory based on installation method
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 if [[ "$SCRIPT_DIR" == */usr/local/bin* ]] || [[ "$SCRIPT_DIR" == */opt/homebrew/bin* ]]; then
-    # Homebrew installation - look in libexec
+    # Homebrew installation - check multiple possible locations
     if [[ -d "$(dirname "$SCRIPT_DIR")/libexec/mac-rebuild/lib/mac-rebuild" ]]; then
         LIB_DIR="$(dirname "$SCRIPT_DIR")/libexec/mac-rebuild/lib/mac-rebuild"
+    elif [[ -d "$(dirname "$SCRIPT_DIR")/Cellar/mac-rebuild/"*"/libexec/lib/mac-rebuild" ]]; then
+        LIB_DIR="$(dirname "$SCRIPT_DIR")/Cellar/mac-rebuild/"*"/libexec/lib/mac-rebuild"
+        LIB_DIR=$(echo $LIB_DIR | head -1)  # Take first match if multiple versions
     else
         # Fallback for older Homebrew layout
         LIB_DIR="$(dirname "$SCRIPT_DIR")/lib/mac-rebuild"
