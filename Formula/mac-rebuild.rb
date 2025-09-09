@@ -3,7 +3,7 @@ class MacRebuild < Formula
   homepage "https://github.com/jtanium/mac-rebuild"
   url "https://github.com/jtanium/mac-rebuild/archive/refs/heads/main.tar.gz"
   version "1.0.3"
-  sha256 "1b95b5ebd122c6437549e12a5b9739f7d02a8d85f1d6f93868d0b067814fc452"
+  sha256 "e9a88555b1132674fa708ffdc2d0744dddc9c0351e4094045f298ceeb3220f83"
 
   def install
     # Install the main script
