@@ -2,7 +2,7 @@ class MacRebuild < Formula
   desc "Intelligent Mac development environment backup and restore tool"
   homepage "https://github.com/jtanium/mac-rebuild"
   url "https://github.com/jtanium/mac-rebuild/archive/v1.0.0.tar.gz"
-  sha256 "PLACEHOLDER_SHA256"
+  sha256 "201c71c1a8a182ce66bf66766c2010ae5ce3cc3a70df3c4d703bd9cdbc41d9b1"
   license "MIT"
 
   depends_on "git"
