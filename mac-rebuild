@@ -1,12 +1,34 @@
 #!/bin/bash
 
 # Mac Rebuild - Intelligent Mac development environment backup and restore tool
-# Version: 1.0.0
+# Version: 1.0.1
 
 set -e
 
-VERSION="1.0.0"
-LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/lib/mac-rebuild" && pwd)"
+VERSION="1.0.1"
+
+# Determine library directory based on installation method
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [[ "$SCRIPT_DIR" == */usr/local/bin* ]] || [[ "$SCRIPT_DIR" == */opt/homebrew/bin* ]]; then
+    # Homebrew installation - look in libexec
+    if [[ -d "$(dirname "$SCRIPT_DIR")/libexec/mac-rebuild/lib/mac-rebuild" ]]; then
+        LIB_DIR="$(dirname "$SCRIPT_DIR")/libexec/mac-rebuild/lib/mac-rebuild"
+    else
+        # Fallback for older Homebrew layout
+        LIB_DIR="$(dirname "$SCRIPT_DIR")/lib/mac-rebuild"
+    fi
+else
+    # Development or manual installation
+    LIB_DIR="$(cd "$SCRIPT_DIR/lib/mac-rebuild" && pwd)"
+fi
+
+# Verify library directory exists
+if [[ ! -d "$LIB_DIR" ]]; then
+    echo "Error: Library directory not found at $LIB_DIR"
+    echo "Please ensure mac-rebuild is properly installed."
+    exit 1
+fi
+
 WORK_DIR="$HOME/.mac-rebuild"
 
 # Colors for output

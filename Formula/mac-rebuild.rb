@@ -1,45 +1,22 @@
 class MacRebuild < Formula
   desc "Intelligent Mac development environment backup and restore tool"
   homepage "https://github.com/jtanium/mac-rebuild"
-  url "https://github.com/jtanium/mac-rebuild/archive/v1.0.0.tar.gz"
-  sha256 "201c71c1a8a182ce66bf66766c2010ae5ce3cc3a70df3c4d703bd9cdbc41d9b1"
-  license "MIT"
-
-  depends_on "git"
+  url "https://github.com/jtanium/mac-rebuild/archive/refs/heads/main.tar.gz"
+  version "1.0.1"
+  sha256 "257d98391597d406298a36b7005b25fe818b1239d40656fc3a770bae091fccef"
 
   def install
+    # Install the main script
     bin.install "mac-rebuild"
-    prefix.install "lib"
-    man1.install "man/mac-rebuild.1"
-  end
 
-  def caveats
-    <<~EOS
-      Mac Rebuild has been installed!
+    # Install library files
+    (libexec/"lib/mac-rebuild").install Dir["lib/mac-rebuild/*"]
 
-      ⚠️  IMPORTANT: Create a Time Machine backup before using this tool!
+    # Install man page
+    man1.install "man/mac-rebuild.1" if File.exist?("man/mac-rebuild.1")
 
-      Getting started:
-        1. mac-rebuild --help          # View all available commands
-        2. mac-rebuild backup          # Create backup with storage options
-        3. mac-rebuild restore <path>  # Restore from backup
-
-      Examples:
-        # Create backup (interactive storage selection)
-        mac-rebuild backup
-
-        # Restore from iCloud Drive
-        mac-rebuild restore ~/Library/Mobile\\ Documents/com~apple~CloudDocs/mac-backup
-
-        # Restore from other cloud storage
-        mac-rebuild restore ~/Dropbox/mac-backup
-        mac-rebuild restore /Volumes/USB/mac-backup
-
-      Fresh install workflow:
-        1. Install Homebrew + mac-rebuild
-        2. mac-rebuild restore <your-backup-path>
-        3. All apps, SSH keys, and settings restored!
-    EOS
+    # Make the main script executable
+    chmod 0755, bin/"mac-rebuild"
   end
 
   test do
