@@ -1,0 +1,69 @@
+.TH MAC-REBUILD 1 "September 2025" "mac-rebuild 1.0.0" "User Commands"
+.SH NAME
+mac-rebuild \- Intelligent Mac development environment backup and restore tool
+.SH SYNOPSIS
+.B mac-rebuild
+[\fICOMMAND\fR] [\fIOPTIONS\fR]
+.SH DESCRIPTION
+.B mac-rebuild
+is an intelligent tool for backing up and restoring macOS development environments. It detects what applications you have installed, asks what you want to backup, and can restore everything from a Git repository after a fresh macOS install.
+.SH COMMANDS
+.TP
+.B backup
+Create an interactive backup of your current system. Detects installed applications and prompts for what to include.
+.TP
+.B restore \fIREPO-URL\fR
+Restore from a backup repository. Clones the repository and restores only the applications and settings you previously selected.
+.TP
+.B init [\fB--repo\fR \fIREPO-URL\fR]
+Initialize mac-rebuild configuration with a backup repository.
+.TP
+.B status
+Show current backup status and configuration.
+.TP
+.B --version, -v
+Show version information.
+.TP
+.B --help, -h
+Show help message.
+.SH EXAMPLES
+.TP
+Create a backup before wiping your machine:
+.B mac-rebuild backup
+.TP
+Restore from a Git repository after fresh install:
+.B mac-rebuild restore https://github.com/username/mac-backup.git
+.TP
+Initialize with a backup repository:
+.B mac-rebuild init --repo git@github.com:username/mac-backup.git
+.SH FRESH INSTALL WORKFLOW
+After a fresh macOS install:
+.IP 1. 4
+Install Homebrew:
+.B /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+.IP 2. 4
+Install mac-rebuild:
+.B brew install mac-rebuild
+.IP 3. 4
+Restore your environment:
+.B mac-rebuild restore <your-backup-repo-url>
+.SH FILES
+.TP
+.I ~/.mac-rebuild/
+Working directory for mac-rebuild
+.TP
+.I ~/.mac-rebuild/config
+Configuration file with backup repository URL
+.TP
+.I ~/.mac-rebuild/backup/
+Local backup data
+.TP
+.I ~/.mac-rebuild/backup-repo/
+Cloned backup repository
+.SH AUTHOR
+Written for developers who need to frequently rebuild their development environments.
+.SH SEE ALSO
+.BR brew (1),
+.BR git (1),
+.BR asdf (1)
+

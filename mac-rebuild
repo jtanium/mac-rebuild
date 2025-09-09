@@ -1,0 +1,326 @@
+#!/bin/bash
+
+# Mac Rebuild - Intelligent Mac development environment backup and restore tool
+# Version: 1.0.0
+
+set -e
+
+VERSION="1.0.0"
+LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/lib/mac-rebuild" && pwd)"
+WORK_DIR="$HOME/.mac-rebuild"
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Function to print colored output
+log() {
+    echo -e "${GREEN}📋 $1${NC}"
+}
+
+warn() {
+    echo -e "${YELLOW}⚠️  $1${NC}"
+}
+
+error() {
+    echo -e "${RED}❌ $1${NC}"
+}
+
+info() {
+    echo -e "${BLUE}ℹ️  $1${NC}"
+}
+
+# Function to show usage
+show_usage() {
+    cat << EOF
+Mac Rebuild v${VERSION} - Intelligent Mac development environment backup and restore
+
+USAGE:
+    mac-rebuild <command> [options]
+
+COMMANDS:
+    backup                  Create an interactive backup of your current system
+    restore <source>        Restore from a backup source (see RESTORE SOURCES below)
+    create-bootstrap        Create a bootstrap package for fresh installs
+    status                  Show current backup status
+    --version              Show version information
+    --help                 Show this help message
+
+RESTORE SOURCES:
+    <path>                 Local directory or mounted drive path
+
+EXAMPLES:
+    # Create backup with multiple storage options
+    mac-rebuild backup
+
+    # Restore from iCloud Drive (recommended)
+    mac-rebuild restore ~/Library/Mobile\ Documents/com~apple~CloudDocs/mac-backup
+
+    # Restore from other cloud storage
+    mac-rebuild restore ~/Dropbox/mac-backup
+    mac-rebuild restore /Volumes/USB/mac-backup
+
+FRESH INSTALL WORKFLOWS:
+
+Option A - iCloud Drive (Recommended ⭐):
+    1. Install Homebrew
+    2. brew install mac-rebuild
+    3. mac-rebuild restore ~/Library/Mobile\ Documents/com~apple~CloudDocs/mac-backup
+
+Option B - Other Cloud Storage:
+    1. Install Homebrew
+    2. brew install mac-rebuild
+    3. mac-rebuild restore /path/to/backup
+
+For more information, visit: https://github.com/jtanium/mac-rebuild
+EOF
+}
+
+# Function to detect storage options and recommend approach
+recommend_storage_approach() {
+    echo ""
+    info "🔐 Storage Options for Your Backup:"
+    echo ""
+    echo "1. 📱 iCloud Drive (Recommended ⭐ - Already authenticated!)"
+    echo "   - Store in: ~/Library/Mobile Documents/com~apple~CloudDocs/"
+    echo "   - Pros: Auto-sync, already authenticated, secure, works immediately"
+    echo "   - Cons: Requires iCloud storage space"
+    echo ""
+    echo "2. 📂 Other Cloud Storage"
+    echo "   - Store in: Dropbox, Google Drive, USB drive"
+    echo "   - Pros: Secure, works immediately after fresh install"
+    echo "   - Cons: Need to manually sync/carry storage"
+    echo ""
+}
+
+# Function to setup from local directory
+setup_backup_local() {
+    local source_dir="$1"
+
+    mkdir -p "$WORK_DIR/backup"
+
+    log "Copying backup from local source..."
+    cp -r "$source_dir"/* "$WORK_DIR/backup/" 2>/dev/null || {
+        error "Failed to copy from: $source_dir"
+        return 1
+    }
+
+    return 0
+}
+
+# Function to check Time Machine backup status
+check_time_machine_backup() {
+    echo ""
+    error "🛡️  IMPORTANT SAFETY CHECK"
+    echo ""
+    warn "Before using Mac Rebuild, you MUST have a Time Machine backup!"
+    echo ""
+    echo "Time Machine protects you from:"
+    echo "• Complete data loss if something goes wrong"
+    echo "• Accidental file overwrites during restore"
+    echo "• System corruption or hardware failure"
+    echo ""
+
+    # Check if Time Machine is configured
+    local tm_status=$(tmutil status 2>/dev/null | grep "Running" || echo "Not running")
+    local tm_destinations=$(tmutil destinationinfo 2>/dev/null | grep "Name" | wc -l || echo "0")
+
+    if [[ "$tm_destinations" -gt 0 ]]; then
+        info "✅ Time Machine destinations found: $tm_destinations"
+        tmutil destinationinfo 2>/dev/null | grep -E "(Name|Mount Point)" | head -6
+    else
+        warn "❌ No Time Machine destinations configured"
+    fi
+
+    echo ""
+    echo "To set up Time Machine:"
+    echo "1. Connect external drive (USB, Thunderbolt, or network)"
+    echo "2. System Settings → General → Time Machine → Add Backup Disk"
+    echo "3. Wait for initial backup to complete (may take hours)"
+    echo "4. Verify backup completed successfully"
+    echo ""
+
+    while true; do
+        read -p "Have you created a complete Time Machine backup? (yes/no): " response
+        case $response in
+            [Yy]es|[Yy])
+                log "✅ Time Machine backup confirmed. Proceeding..."
+                break
+                ;;
+            [Nn]o|[Nn])
+                error "❌ Please create a Time Machine backup first!"
+                echo ""
+                echo "Mac Rebuild will not run without a Time Machine backup."
+                echo "This protects you from potential data loss."
+                echo ""
+                echo "After creating your backup, run this command again."
+                exit 1
+                ;;
+            *)
+                warn "Please answer 'yes' or 'no'"
+                ;;
+        esac
+    done
+    echo ""
+}
+
+# Function to show data loss disclaimer
+show_safety_disclaimer() {
+    echo ""
+    warn "🚨 DATA LOSS RISK DISCLAIMER"
+    echo ""
+    echo "Mac Rebuild is provided \"AS IS\" without warranty."
+    echo "While designed to be safe:"
+    echo ""
+    echo "• YOU are responsible for backing up your data"
+    echo "• Restoration operations can overwrite existing files"
+    echo "• Always test on a non-critical machine first"
+    echo "• Time Machine is your safety net for full recovery"
+    echo ""
+    echo "By continuing, you acknowledge:"
+    echo "• You have created a complete Time Machine backup"
+    echo "• You understand the risk of data loss"
+    echo "• You accept full responsibility for any data loss"
+    echo "• You will not hold the authors liable for damages"
+    echo ""
+
+    read -p "Do you understand and accept these risks? (yes/no): " response
+    case $response in
+        [Yy]es|[Yy])
+            log "✅ Risk acknowledgment confirmed."
+            ;;
+        *)
+            error "❌ Risk acknowledgment required to proceed."
+            exit 1
+            ;;
+    esac
+    echo ""
+}
+
+# Function to create backup with storage options
+cmd_backup() {
+    # Always check for Time Machine backup before creating new backup
+    check_time_machine_backup
+    show_safety_disclaimer
+
+    recommend_storage_approach
+
+    echo -n "Choose storage approach [1-2]: "
+    read -r storage_choice
+
+    case "$storage_choice" in
+        1)
+            # iCloud Drive storage
+            log "Setting up iCloud Drive backup..."
+            local icloud_path="$HOME/Library/Mobile Documents/com~apple~CloudDocs/mac-backup"
+
+            # Check if iCloud Drive is available
+            if [[ ! -d "$HOME/Library/Mobile Documents/com~apple~CloudDocs" ]]; then
+                error "iCloud Drive not found. Please enable iCloud Drive in System Preferences."
+                info "Alternative: Choose option 2 for other cloud storage"
+                return 1
+            fi
+
+            mkdir -p "$icloud_path"
+            BACKUP_DIR="$icloud_path" "$LIB_DIR/backup_interactive.sh"
+
+            echo ""
+            log "✅ Backup stored in iCloud Drive!"
+            info "📁 Location: $icloud_path"
+            info "🔄 iCloud will sync this across all your devices"
+            info "📱 After fresh install, restore with:"
+            echo "    mac-rebuild restore ~/Library/Mobile\\ Documents/com~apple~CloudDocs/mac-backup"
+            ;;
+        2)
+            # Other cloud storage
+            log "Setting up other cloud storage backup..."
+            echo -n "Enter backup directory path (e.g., ~/Dropbox/mac-backup): "
+            read -r backup_path
+            backup_path="${backup_path/#\~/$HOME}"  # Expand tilde
+            mkdir -p "$backup_path"
+            BACKUP_DIR="$backup_path" "$LIB_DIR/backup_interactive.sh"
+            info "Backup stored at: $backup_path"
+            info "Copy this folder to your cloud storage or USB drive"
+            ;;
+        *)
+            error "Invalid choice. Please run mac-rebuild backup again."
+            return 1
+            ;;
+    esac
+}
+
+# Function to handle restore from various sources
+cmd_restore() {
+    local source="$1"
+
+    if [[ -z "$source" ]]; then
+        error "Source is required for restore"
+        echo "Usage: mac-rebuild restore <source>"
+        echo "Sources: <local-path>"
+        return 1
+    fi
+
+    # Always check for Time Machine backup before restoring (most risky operation)
+    check_time_machine_backup
+    show_safety_disclaimer
+
+    # Determine source type and handle accordingly
+    if [[ -d "$source" ]]; then
+        log "Restoring from local directory..."
+        setup_backup_local "$source"
+    else
+        error "Invalid source: $source"
+        info "Use: <local-path>"
+        return 1
+    fi
+
+    # Run restore with the prepared backup
+    BACKUP_DIR="$WORK_DIR/backup" "$LIB_DIR/restore.sh"
+}
+
+# Function to show status
+cmd_status() {
+    if [[ -f "$WORK_DIR/backup/backup_summary.txt" ]]; then
+        echo ""
+        log "Last backup summary:"
+        cat "$WORK_DIR/backup/backup_summary.txt"
+    else
+        warn "No backup found locally"
+    fi
+
+    recommend_storage_approach
+}
+
+# Main command handler
+case "${1:-}" in
+    backup)
+        shift
+        cmd_backup "$@"
+        ;;
+    restore)
+        shift
+        cmd_restore "$@"
+        ;;
+    status)
+        shift
+        cmd_status "$@"
+        ;;
+    --version|-v)
+        echo "Mac Rebuild v${VERSION}"
+        ;;
+    --help|-h|help)
+        show_usage
+        ;;
+    "")
+        show_usage
+        ;;
+    *)
+        error "Unknown command: $1"
+        echo ""
+        show_usage
+        exit 1
+        ;;
+esac
