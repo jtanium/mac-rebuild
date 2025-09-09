@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # Mac Rebuild - Intelligent Mac development environment backup and restore tool
-# Version: 2.0.0
+# Version: 2.1.0
 
 set -e
 
-VERSION="2.0.0"
+VERSION="2.1.0"
 
 # Determine library directory based on installation method
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -94,6 +94,7 @@ COMMANDS:
     create-bootstrap        Create a bootstrap package for fresh installs
     status                  Show current backup status
     plugins                 List available plugins and their status
+    purge                   Delete all local backup files to start fresh
     --version              Show version information
     --help                 Show this help message
 
@@ -117,6 +118,9 @@ EXAMPLES:
 
     # List available plugins
     mac-rebuild plugins
+
+    # Clear all backup files
+    mac-rebuild purge
 
 FRESH INSTALL WORKFLOWS:
 
@@ -384,6 +388,147 @@ cmd_status() {
     recommend_storage_approach
 }
 
+# Function to purge backup files
+cmd_purge() {
+    echo ""
+    log "Mac Rebuild - Purge Backup Files"
+    echo ""
+
+    # Define common backup locations
+    local backup_locations=(
+        "$HOME/.mac-rebuild"
+        "$HOME/Library/Mobile Documents/com~apple~CloudDocs/mac-backup"
+        "$HOME/Dropbox/mac-backup"
+        "$HOME/Google Drive/mac-backup"
+        "$HOME/OneDrive/mac-backup"
+    )
+
+    # Find existing backup locations
+    local found_locations=()
+    local total_size=0
+
+    echo "🔍 Scanning for mac-rebuild backup files..."
+    echo ""
+
+    for location in "${backup_locations[@]}"; do
+        if [[ -d "$location" ]]; then
+            local size_kb=$(du -sk "$location" 2>/dev/null | cut -f1 || echo "0")
+            if [[ $size_kb -gt 0 ]]; then
+                local size_human=$(du -sh "$location" 2>/dev/null | cut -f1 || echo "unknown")
+                found_locations+=("$location")
+                total_size=$((total_size + size_kb))
+
+                echo "📁 Found backup: $location ($size_human)"
+
+                # Show backup date if available
+                if [[ -f "$location/backup_summary.txt" ]]; then
+                    local backup_date=$(head -1 "$location/backup_summary.txt" 2>/dev/null | grep -o '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]' || echo "unknown")
+                    echo "   📅 Last backup: $backup_date"
+                elif [[ -f "$location/backup/backup_summary.txt" ]]; then
+                    local backup_date=$(head -1 "$location/backup/backup_summary.txt" 2>/dev/null | grep -o '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]' || echo "unknown")
+                    echo "   📅 Last backup: $backup_date"
+                fi
+                echo ""
+            fi
+        fi
+    done
+
+    # Check for custom locations
+    echo "💡 If you have backups in other locations, you can specify them manually."
+    if ask_yes_no "Do you have backups in a custom location?" "n"; then
+        echo -n "Enter the full path to your backup directory: "
+        read -r custom_location
+        custom_location="${custom_location/#\~/$HOME}"  # Expand tilde
+
+        if [[ -d "$custom_location" ]]; then
+            local size_kb=$(du -sk "$custom_location" 2>/dev/null | cut -f1 || echo "0")
+            if [[ $size_kb -gt 0 ]]; then
+                local size_human=$(du -sh "$custom_location" 2>/dev/null | cut -f1 || echo "unknown")
+                found_locations+=("$custom_location")
+                total_size=$((total_size + size_kb))
+                echo "📁 Found custom backup: $custom_location ($size_human)"
+                echo ""
+            fi
+        else
+            warn "Custom location not found or empty: $custom_location"
+            echo ""
+        fi
+    fi
+
+    # Show results
+    if [[ ${#found_locations[@]} -eq 0 ]]; then
+        info "No backup files found to purge."
+        echo ""
+        echo "Searched locations:"
+        for location in "${backup_locations[@]}"; do
+            echo "  📂 $location"
+        done
+        return 0
+    fi
+
+    # Convert total size to human readable
+    local total_size_human
+    if [[ $total_size -gt 1048576 ]]; then
+        total_size_human="$(echo "scale=1; $total_size / 1048576" | bc)G"
+    elif [[ $total_size -gt 1024 ]]; then
+        total_size_human="$(echo "scale=1; $total_size / 1024" | bc)M"
+    else
+        total_size_human="${total_size}K"
+    fi
+
+    echo "📊 Summary:"
+    echo "   Found ${#found_locations[@]} backup location(s)"
+    echo "   Total size: $total_size_human"
+    echo ""
+
+    # Show what will be deleted
+    echo "This will permanently delete backup files from:"
+    for location in "${found_locations[@]}"; do
+        echo "  📁 $location"
+    done
+    echo ""
+
+    # Confirm deletion
+    warn "This action cannot be undone!"
+    echo "💾 Make sure you have any important data backed up elsewhere."
+    echo ""
+
+    if ask_yes_no "Are you sure you want to delete ALL these backup files?" "n"; then
+        echo ""
+        log "Purging backup files..."
+
+        local failed_deletions=()
+        local successful_deletions=0
+
+        for location in "${found_locations[@]}"; do
+            echo "🗑️  Deleting: $location"
+            if rm -rf "$location" 2>/dev/null; then
+                echo "✅ Successfully deleted: $location"
+                ((successful_deletions++))
+            else
+                echo "❌ Failed to delete: $location"
+                failed_deletions+=("$location")
+            fi
+        done
+
+        echo ""
+        if [[ ${#failed_deletions[@]} -eq 0 ]]; then
+            echo "✅ All backup files have been successfully purged ($successful_deletions location(s))"
+            echo "💡 You can create a new backup with: mac-rebuild backup"
+        else
+            warn "Some backup files could not be deleted:"
+            for failed in "${failed_deletions[@]}"; do
+                echo "  ❌ $failed"
+            done
+            echo ""
+            echo "You may need to manually delete these directories or check permissions."
+            echo "Successfully deleted: $successful_deletions location(s)"
+        fi
+    else
+        echo "Purge cancelled."
+    fi
+}
+
 # Main command handler
 case "${1:-}" in
     backup)
@@ -400,6 +545,9 @@ case "${1:-}" in
     status)
         shift
         cmd_status "$@"
+        ;;
+    purge)
+        cmd_purge
         ;;
     --version|-v)
         echo "Mac Rebuild v${VERSION}"

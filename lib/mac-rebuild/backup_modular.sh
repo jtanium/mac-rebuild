@@ -6,7 +6,8 @@
 set -e  # Exit on any error
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-BACKUP_DIR="$SCRIPT_DIR/backup"
+# Use environment variable if provided, otherwise fall back to default
+BACKUP_DIR="${BACKUP_DIR:-$SCRIPT_DIR/backup}"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 
 # Load configuration and plugin system
