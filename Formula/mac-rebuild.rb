@@ -2,8 +2,8 @@ class MacRebuild < Formula
   desc "Intelligent Mac development environment backup and restore tool"
   homepage "https://github.com/jtanium/mac-rebuild"
   url "https://github.com/jtanium/mac-rebuild/archive/refs/heads/main.tar.gz"
-  version "1.0.3"
-  sha256 "764c1af59a5597378c91c3c1f257ea9b57b5948f9aae6ecca9bd93cfea75d511"
+  version "1.0.4"
+  sha256 "1d7ae65bce9f509314f2d0fd84dcb0bf8dd1bcfb8b7a5c051f1cf044acd51023"
 
   def install
     # Install the main script

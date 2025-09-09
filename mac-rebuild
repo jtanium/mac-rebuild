@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # Mac Rebuild - Intelligent Mac development environment backup and restore tool
-# Version: 1.0.3
+# Version: 1.0.4
 
 set -e
 
-VERSION="1.0.3"
+VERSION="1.0.4"
 
 # Determine library directory based on installation method
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -13,9 +13,14 @@ if [[ "$SCRIPT_DIR" == */usr/local/bin* ]] || [[ "$SCRIPT_DIR" == */opt/homebrew
     # Homebrew installation - check multiple possible locations
     if [[ -d "$(dirname "$SCRIPT_DIR")/libexec/mac-rebuild/lib/mac-rebuild" ]]; then
         LIB_DIR="$(dirname "$SCRIPT_DIR")/libexec/mac-rebuild/lib/mac-rebuild"
-    elif [[ -d "$(dirname "$SCRIPT_DIR")/Cellar/mac-rebuild/"*"/libexec/lib/mac-rebuild" ]]; then
-        LIB_DIR="$(dirname "$SCRIPT_DIR")/Cellar/mac-rebuild/"*"/libexec/lib/mac-rebuild"
-        LIB_DIR=$(echo $LIB_DIR | head -1)  # Take first match if multiple versions
+    elif [[ -d "$(dirname "$SCRIPT_DIR")/Cellar/mac-rebuild" ]]; then
+        # Find the actual version directory in Cellar
+        LIB_DIR=$(find "$(dirname "$SCRIPT_DIR")/Cellar/mac-rebuild" -name "libexec" -type d | head -1)
+        if [[ -n "$LIB_DIR" ]]; then
+            LIB_DIR="$LIB_DIR/lib/mac-rebuild"
+        else
+            LIB_DIR="$(dirname "$SCRIPT_DIR")/lib/mac-rebuild"
+        fi
     else
         # Fallback for older Homebrew layout
         LIB_DIR="$(dirname "$SCRIPT_DIR")/lib/mac-rebuild"
