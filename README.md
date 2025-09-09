@@ -1,6 +1,24 @@
-# Mac Rebuild - Homebrew Package
+# Mac Rebuild v2.0 - Intelligent Mac Development Environment Manager
 
-An intelligent Mac development environment backup and restore tool that solves the SSH key authentication problem for fresh installs.
+A **modular, plugin-based** Mac development environment backup and restore tool that solves the SSH key authentication problem for fresh installs.
+
+## 🎉 What's New in v2.0
+
+**Major Architecture Overhaul!** Mac Rebuild v2.0 introduces a complete **modular plugin system** that makes it incredibly easy to extend and customize your backup/restore process.
+
+### ✨ Key v2.0 Features
+- **🔧 Modular Plugin Architecture**: Each component (Homebrew, ASDF, VS Code, JetBrains, etc.) is now an isolated plugin
+- **🎯 Enhanced JetBrains Support**: Automatically detects and restores IDEs via Homebrew
+- **⚡ Enhanced ASDF Plugin**: System dependencies, URL-based plugin backup, fallback strategies
+- **📦 7 Core Plugins**: Ready-to-use plugins for all major development tools
+- **🔍 Plugin Management**: `mac-rebuild plugins` command to see what's available
+- **🚀 Simplified Interface**: Clean commands - no more complex flags
+- **🔌 Easy Extensibility**: Add new tools by creating simple plugin files
+
+### 🔄 Migration from v1.x
+- **Fully backward compatible** - existing backups work perfectly
+- **Simplified commands** - just `mac-rebuild backup` and `mac-rebuild restore <path>`
+- **Enhanced features** - JetBrains IDEs now auto-install during restore
 
 ## 🎯 Why Mac Rebuild?
 
@@ -252,13 +270,73 @@ mac-rebuild restore /Volumes/USB/mac-backup
 - **Local Encryption:** macOS encrypts data before sending to iCloud
 - **No GitHub Issues:** No public repository concerns
 
-## 🎯 Perfect for Your Use Case
+## 🚀 What Gets Restored Automatically
 
-Since you're on macOS and likely already use Apple ID:
-1. **No authentication hassle** - iCloud just works
-2. **SSH keys safely stored** - encrypted and private
-3. **Immediate availability** - syncs during macOS setup
-4. **Zero manual steps** - no USB drives or file copying
-5. **All your apps restored** - JetBrains, Slack, Brave, etc.
+With Mac Rebuild v2.0's plugin system, here's what gets automatically detected, backed up, and restored:
 
-This eliminates the SSH key chicken-and-egg problem completely while being the most convenient option!
+### 🍺 Development Tools
+- **Homebrew**: All packages, casks, and taps
+- **ASDF**: Version managers with system dependencies (Node.js, Python, Ruby, Go, etc.)
+- **Git**: Global configuration and credentials
+
+### 💻 IDEs & Editors  
+- **JetBrains IDEs**: Auto-detects and installs IntelliJ, GoLand, PyCharm, WebStorm, CLion, etc.
+- **VS Code**: Settings, extensions, keybindings, and themes
+- **IDE Settings**: All your customizations, themes, and preferences
+
+### 📱 Applications
+- **App Store Apps**: List of installed applications (manual install required)
+- **Homebrew Casks**: Automatic installation of GUI applications
+
+### ⚙️ Configuration  
+- **Dotfiles**: `.zshrc`, `.gitconfig`, `.npmrc`, and other config files
+- **SSH Keys**: Secure backup and restore (with user consent)
+- **Shell Configuration**: Terminal setup and aliases
+
+## 📊 Commands Reference
+
+```bash
+# Create a backup
+mac-rebuild backup
+
+# Restore from backup
+mac-rebuild restore <path>
+
+# List available plugins
+mac-rebuild plugins
+
+# Check status
+mac-rebuild status
+
+# Show version
+mac-rebuild --version
+
+# Show help
+mac-rebuild --help
+```
+
+## 🤝 Contributing
+
+Mac Rebuild v2.0's modular architecture makes contributing easy! You can:
+
+1. **Create plugins** for new tools and applications
+2. **Improve existing plugins** with better detection or features
+3. **Submit bug reports** and feature requests
+4. **Improve documentation** and examples
+
+See the [Plugin Development Guide](#plugin-development-guide) above for detailed instructions.
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- Built for developers who value clean, fast development environments
+- Inspired by the need to solve the SSH key authentication problem
+- Thanks to the Homebrew community for making package management simple
+- Special thanks to contributors who help extend the plugin ecosystem
+
+---
+
+**Ready to rebuild your Mac the smart way?** Start with `mac-rebuild backup` and experience the future of Mac development environment management! 🚀
