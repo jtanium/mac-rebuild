@@ -7,10 +7,10 @@ An intelligent Mac development environment backup and restore tool that solves t
 ### Install via Homebrew (Recommended)
 
 ```bash
-# Install directly from the tap
-brew install jtanium/mac-rebuild/mac-rebuild
+# Method 1: Direct formula installation (most reliable)
+brew install https://raw.githubusercontent.com/jtanium/mac-rebuild/main/Formula/mac-rebuild.rb
 
-# Or add the tap first, then install
+# Method 2: Using tap (now with correct repository name)
 brew tap jtanium/mac-rebuild
 brew install mac-rebuild
 ```
@@ -20,12 +20,9 @@ brew install mac-rebuild
 If you encounter authentication issues:
 
 ```bash
-# Option 1: Install directly from raw formula URL
-brew install https://raw.githubusercontent.com/jtanium/mac-rebuild/main/Formula/mac-rebuild.rb
-
-# Option 2: Force HTTPS and retry
+# Force HTTPS and retry
 git config --global url."https://github.com/".insteadOf git@github.com:
-brew install jtanium/mac-rebuild/mac-rebuild
+brew install https://raw.githubusercontent.com/jtanium/mac-rebuild/main/Formula/mac-rebuild.rb
 ```
 
 ### Verify Installation
