@@ -2,6 +2,20 @@
 
 An intelligent Mac development environment backup and restore tool that solves the SSH key authentication problem for fresh installs.
 
+## 🎯 Why Mac Rebuild?
+
+**The Clean Slate Problem:** Over time, your Mac accumulates digital cruft - old cache files, forgotten applications, outdated configurations, and system bloat that slows everything down. While Time Machine is excellent for disaster recovery, it restores *everything* - including all that accumulated junk you'd rather leave behind.
+
+**Mac Rebuild's Philosophy:** Start fresh, restore smart. Instead of dragging forward years of digital baggage, Mac Rebuild lets you:
+
+- ✨ **Clean slate setup** - Fresh macOS without the cruft
+- 🎯 **Selective restoration** - Only restore what you actually need
+- 🚀 **Performance boost** - Eliminate years of accumulated system bloat
+- 🧹 **Digital decluttering** - Perfect opportunity to audit your setup
+- ⚡ **Faster machine** - Like getting a new Mac without buying one
+
+Think of it as "Marie Kondo for your Mac" - if a setting or app doesn't spark joy (or productivity), leave it in the past.
+
 ## 📦 Installation
 
 ### Install via Homebrew (Recommended)

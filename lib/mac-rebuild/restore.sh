@@ -9,8 +9,16 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BACKUP_DIR="${BACKUP_DIR:-$SCRIPT_DIR/backup}"
 USER_PREFS="$BACKUP_DIR/user_preferences.txt"
 
+# Detect Homebrew installation path
+if [[ $(uname -m) == "arm64" ]]; then
+    HOMEBREW_PREFIX="/opt/homebrew"
+else
+    HOMEBREW_PREFIX="/usr/local"
+fi
+
 echo "🚀 Starting interactive Mac restore process..."
 echo "Backup directory: $BACKUP_DIR"
+echo "Detected Homebrew prefix: $HOMEBREW_PREFIX"
 
 # Check if backup exists
 if [ ! -d "$BACKUP_DIR" ]; then
@@ -77,8 +85,8 @@ if ! command -v brew &> /dev/null; then
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
     # Add Homebrew to PATH for this session
-    echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile
-    eval "$(/opt/homebrew/bin/brew shellenv)"
+    echo "eval \"\$(${HOMEBREW_PREFIX}/bin/brew shellenv)\"" >> ~/.zprofile
+    eval "$(${HOMEBREW_PREFIX}/bin/brew shellenv)"
     echo "✅ Homebrew installed"
 else
     echo "✅ Homebrew already installed"
@@ -139,7 +147,7 @@ if [ -f "$BACKUP_DIR/asdf/plugins.txt" ]; then
     # Install ASDF via Homebrew if not already installed
     if ! command -v asdf &> /dev/null; then
         brew install asdf
-        echo '. /opt/homebrew/opt/asdf/libexec/asdf.sh' >> ~/.zshrc
+        echo ". $HOMEBREW_PREFIX/opt/asdf/libexec/asdf.sh" >> ~/.zshrc
         source ~/.zshrc
     fi
 

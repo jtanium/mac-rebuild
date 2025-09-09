@@ -9,11 +9,19 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BACKUP_DIR="${BACKUP_DIR:-$SCRIPT_DIR/backup}"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 
+# Detect Homebrew installation path
+if [[ $(uname -m) == "arm64" ]]; then
+    HOMEBREW_PREFIX="/opt/homebrew"
+else
+    HOMEBREW_PREFIX="/usr/local"
+fi
+
 # Load configuration
 source "$SCRIPT_DIR/config.sh"
 
 echo "🚀 Starting interactive Mac backup process..."
 echo "Backup directory: $BACKUP_DIR"
+echo "Detected Homebrew prefix: $HOMEBREW_PREFIX"
 
 # Create backup directory
 mkdir -p "$BACKUP_DIR"/{homebrew,asdf,apps,dotfiles,system_preferences,ssh_keys,vscode,jetbrains}
@@ -75,7 +83,7 @@ if ! command -v brew &> /dev/null; then
     echo "⚠️  Homebrew not installed. Installing it first would make backup more complete."
     if ask_yes_no "Would you like to install Homebrew now?"; then
         /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-        eval "$(/opt/homebrew/bin/brew shellenv)"
+        eval "$(${HOMEBREW_PREFIX}/bin/brew shellenv)"
     fi
 fi
 
