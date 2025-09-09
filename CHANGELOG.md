@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.7] - 2025-09-09
+
+### Added
+- **Project Philosophy Documentation**: Added comprehensive "Why Mac Rebuild?" section to README
+  - Explains the clean slate philosophy vs Time Machine's "restore everything" approach
+  - Describes the digital cruft problem that accumulates over time
+  - Added "Marie Kondo for your Mac" analogy for selective restoration
+  - Emphasizes performance benefits of starting fresh without digital baggage
+
+### Changed
+- **Improved Documentation**: Enhanced README with clearer motivation and value proposition
+- **Better User Onboarding**: Users now understand why Mac Rebuild exists before diving into technical details
+
+## [1.0.6] - 2025-09-09
+
 ### Fixed
 - **Cross-Platform Compatibility**: Fixed Intel vs Apple Silicon Mac compatibility issues
   - Backup script now dynamically detects Homebrew installation path (`/opt/homebrew` for Apple Silicon, `/usr/local` for Intel)
@@ -46,7 +61,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Multiple Storage Options**: iCloud, Dropbox, Google Drive, Git repositories
 - **Security First**: Automatic exclusion of sensitive data from public repos
 
-[Unreleased]: https://github.com/jtanium/mac-rebuild/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/jtanium/mac-rebuild/releases/tag/v1.0.0
-[Unreleased]: https://github.com/jtanium/mac-rebuild/compare/v1.0.6...HEAD
+[Unreleased]: https://github.com/jtanium/mac-rebuild/compare/v1.0.7...HEAD
+[1.0.7]: https://github.com/jtanium/mac-rebuild/compare/v1.0.6...v1.0.7
 [1.0.6]: https://github.com/jtanium/mac-rebuild/compare/v1.0.0...v1.0.6
+[1.0.0]: https://github.com/jtanium/mac-rebuild/releases/tag/v1.0.0
