@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Cross-Platform Compatibility**: Fixed Intel vs Apple Silicon Mac compatibility issues
+  - Backup script now dynamically detects Homebrew installation path (`/opt/homebrew` for Apple Silicon, `/usr/local` for Intel)
+  - Restore script now correctly handles ASDF installation paths based on detected architecture
+  - Eliminated hardcoded `/opt/homebrew` paths that caused "No such file or directory" errors on Intel Macs
+  - Both backup and restore operations now work seamlessly across all Mac architectures
+
+### Removed
+- **Homebrew Formula**: Removed `Formula/mac-rebuild.rb` file to eliminate circular dependency
+  - Formula file created chicken-and-egg problem where updating SHA hash would change the calculated SHA
+  - Users should now install directly via repository cloning or installation scripts
+  - Removes maintenance overhead of keeping SHA hashes in sync
+
+### Changed
+- **Architecture Detection**: Both scripts now display detected Homebrew prefix during startup for transparency
+- **Error Prevention**: Improved reliability when running restore operations on different Mac architectures
+
 ## [1.0.0] - 2025-09-08
 
 ### Added
@@ -31,3 +48,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 [Unreleased]: https://github.com/jtanium/mac-rebuild/compare/v1.0.0...HEAD
 [1.0.0]: https://github.com/jtanium/mac-rebuild/releases/tag/v1.0.0
+[Unreleased]: https://github.com/jtanium/mac-rebuild/compare/v1.0.6...HEAD
+[1.0.6]: https://github.com/jtanium/mac-rebuild/compare/v1.0.0...v1.0.6
