@@ -146,27 +146,198 @@ log "Installing and configuring ASDF..."
 if [ -f "$BACKUP_DIR/asdf/plugins.txt" ]; then
     # Install ASDF via Homebrew if not already installed
     if ! command -v asdf &> /dev/null; then
+        echo "Installing ASDF..."
         brew install asdf
+
+        # Add ASDF to shell configuration
         echo ". $HOMEBREW_PREFIX/opt/asdf/libexec/asdf.sh" >> ~/.zshrc
-        source ~/.zshrc
+
+        # Source ASDF for current session
+        . "$HOMEBREW_PREFIX/opt/asdf/libexec/asdf.sh"
+        echo "✅ ASDF installed"
+    else
+        # Make sure ASDF is available in current session
+        . "$HOMEBREW_PREFIX/opt/asdf/libexec/asdf.sh" 2>/dev/null || true
+        echo "✅ ASDF already installed"
     fi
 
-    # Restore ASDF plugins
-    while IFS= read -r plugin; do
-        if [ -n "$plugin" ]; then
-            asdf plugin add "$plugin" || handle_error "ASDF plugin" "Could not add plugin: $plugin"
-        fi
-    done < "$BACKUP_DIR/asdf/plugins.txt"
+    # Install system dependencies for common ASDF plugins
+    log "Installing system dependencies for ASDF plugins..."
+    echo "This may take a while as we install compilation dependencies..."
 
-    # Restore .tool-versions
+    # Check what plugins we're about to install and install their dependencies
+    if [ -f "$BACKUP_DIR/asdf/plugins.txt" ]; then
+        while IFS= read -r plugin; do
+            if [ -n "$plugin" ]; then
+                case "$plugin" in
+                    "nodejs")
+                        echo "Installing Node.js dependencies..."
+                        brew install gpg gawk || true
+                        ;;
+                    "python")
+                        echo "Installing Python dependencies..."
+                        brew install openssl readline sqlite3 xz zlib tcl-tk || true
+                        ;;
+                    "ruby")
+                        echo "Installing Ruby dependencies..."
+                        brew install openssl readline libyaml gmp || true
+                        ;;
+                    "erlang")
+                        echo "Installing Erlang dependencies..."
+                        brew install autoconf openssl wxwidgets libxslt fop || true
+                        ;;
+                    "elixir")
+                        echo "Installing Elixir dependencies (requires Erlang)..."
+                        brew install autoconf openssl wxwidgets libxslt fop || true
+                        ;;
+                    "golang")
+                        echo "Go plugin typically doesn't need system dependencies..."
+                        ;;
+                    "java")
+                        echo "Java plugin typically doesn't need system dependencies..."
+                        ;;
+                    "rust")
+                        echo "Installing Rust dependencies..."
+                        brew install gcc || true
+                        ;;
+                    "postgres")
+                        echo "Installing PostgreSQL dependencies..."
+                        brew install icu4c pkg-config || true
+                        ;;
+                    *)
+                        echo "Unknown plugin dependencies for: $plugin"
+                        ;;
+                esac
+            fi
+        done < "$BACKUP_DIR/asdf/plugins.txt"
+    fi
+
+    # Restore ASDF plugins with proper error handling
+    log "Restoring ASDF plugins..."
+    failed_plugins=()
+
+    # Use plugin URLs if available, otherwise fall back to plugin names
+    if [ -f "$BACKUP_DIR/asdf/plugin_urls.txt" ]; then
+        while IFS= read -r line; do
+            if [ -n "$line" ] && [[ ! "$line" =~ ^# ]]; then
+                plugin_name=$(echo "$line" | awk '{print $1}')
+                plugin_url=$(echo "$line" | awk '{print $2}')
+
+                if [ -n "$plugin_name" ]; then
+                    echo "Adding plugin: $plugin_name"
+                    if [ -n "$plugin_url" ] && [ "$plugin_url" != "$plugin_name" ]; then
+                        # Add plugin with URL
+                        if ! asdf plugin add "$plugin_name" "$plugin_url" 2>/dev/null; then
+                            echo "⚠️  Failed to add $plugin_name with URL, trying without URL..."
+                            if ! asdf plugin add "$plugin_name" 2>/dev/null; then
+                                echo "❌ Failed to add plugin: $plugin_name"
+                                failed_plugins+=("$plugin_name")
+                            fi
+                        fi
+                    else
+                        # Add plugin without URL
+                        if ! asdf plugin add "$plugin_name" 2>/dev/null; then
+                            echo "❌ Failed to add plugin: $plugin_name"
+                            failed_plugins+=("$plugin_name")
+                        fi
+                    fi
+                fi
+            fi
+        done < "$BACKUP_DIR/asdf/plugin_urls.txt"
+    else
+        # Fallback to basic plugin list
+        while IFS= read -r plugin; do
+            if [ -n "$plugin" ]; then
+                echo "Adding plugin: $plugin"
+                if ! asdf plugin add "$plugin" 2>/dev/null; then
+                    echo "❌ Failed to add plugin: $plugin"
+                    failed_plugins+=("$plugin")
+                fi
+            fi
+        done < "$BACKUP_DIR/asdf/plugins.txt"
+    fi
+
+    # Report failed plugins
+    if [ ${#failed_plugins[@]} -gt 0 ]; then
+        echo "⚠️  The following plugins failed to install:"
+        printf '   - %s\n' "${failed_plugins[@]}"
+        echo "   You may need to install them manually later."
+    fi
+
+    # Restore .tool-versions files
     if [ -f "$BACKUP_DIR/asdf/.tool-versions" ]; then
+        echo "Restoring .tool-versions file..."
         cp "$BACKUP_DIR/asdf/.tool-versions" "$HOME/" || handle_error "ASDF tool-versions" "Could not restore .tool-versions"
-
-        # Install all versions from .tool-versions
-        cd "$HOME"
-        asdf install || handle_error "ASDF install" "Could not install tools from .tool-versions"
     fi
+
+    if [ -f "$BACKUP_DIR/asdf/.tool-versions-global" ]; then
+        echo "Restoring global .tool-versions file..."
+        mkdir -p "$HOME/.asdf"
+        cp "$BACKUP_DIR/asdf/.tool-versions-global" "$HOME/.asdf/.tool-versions" || handle_error "ASDF global tool-versions" "Could not restore global .tool-versions"
+    fi
+
+    # Install tool versions from .tool-versions with better error handling
+    if [ -f "$HOME/.tool-versions" ]; then
+        log "Installing tool versions from .tool-versions..."
+        echo "This may take a very long time as runtimes are compiled from source..."
+        echo "You can safely interrupt and run 'asdf install' manually later if needed."
+
+        cd "$HOME"
+
+        # Read .tool-versions and install each tool individually with better error handling
+        while IFS= read -r line; do
+            if [ -n "$line" ] && [[ ! "$line" =~ ^# ]]; then
+                tool=$(echo "$line" | awk '{print $1}')
+                version=$(echo "$line" | awk '{print $2}')
+
+                if [ -n "$tool" ] && [ -n "$version" ]; then
+                    echo "Installing $tool $version..."
+
+                    # Check if plugin is installed first
+                    if asdf plugin list | grep -q "^$tool$"; then
+                        # Try to install the specific version
+                        if ! asdf install "$tool" "$version"; then
+                            echo "❌ Failed to install $tool $version"
+                            echo "   You can install it manually later with: asdf install $tool $version"
+
+                            # Try to install latest available version as fallback
+                            echo "   Attempting to install latest version of $tool..."
+                            latest_version=$(asdf latest "$tool" 2>/dev/null || echo "")
+                            if [ -n "$latest_version" ] && [ "$latest_version" != "$version" ]; then
+                                if asdf install "$tool" "$latest_version" 2>/dev/null; then
+                                    echo "✅ Installed $tool $latest_version (latest) instead"
+                                    asdf global "$tool" "$latest_version" 2>/dev/null || true
+                                else
+                                    echo "❌ Could not install any version of $tool"
+                                fi
+                            fi
+                        else
+                            echo "✅ Successfully installed $tool $version"
+                            asdf global "$tool" "$version" 2>/dev/null || true
+                        fi
+                    else
+                        echo "⚠️  Plugin $tool not available, skipping..."
+                    fi
+                fi
+            fi
+        done < "$HOME/.tool-versions"
+    fi
+
+    # Final reshim to ensure all binaries are available
+    echo "Reshimming ASDF..."
+    asdf reshim 2>/dev/null || true
+
     echo "✅ ASDF configuration restored"
+    echo ""
+    echo "📋 ASDF Restoration Summary:"
+    echo "   - Plugins restored with dependency management"
+    echo "   - Tool versions installed (some may have failed)"
+    echo "   - Run 'asdf current' to see active versions"
+    echo "   - Run 'asdf install' to retry any failed installations"
+
+    if [ ${#failed_plugins[@]} -gt 0 ]; then
+        echo "   - Some plugins failed - you may need to install them manually"
+    fi
 fi
 
 # Restore App Store apps

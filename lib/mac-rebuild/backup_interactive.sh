@@ -165,13 +165,60 @@ fi
 echo ""
 log "Backing up ASDF tools and versions..."
 if command -v asdf &> /dev/null; then
+    # Create detailed ASDF backup
     asdf current > "$BACKUP_DIR/asdf/current_versions.txt" 2>/dev/null || handle_error "ASDF current" "Could not get current versions"
     asdf plugin list > "$BACKUP_DIR/asdf/plugins.txt" 2>/dev/null || handle_error "ASDF plugins" "Could not list plugins"
+
+    # Backup plugin URLs for proper restoration
+    echo "# ASDF Plugin URLs for restoration" > "$BACKUP_DIR/asdf/plugin_urls.txt"
+    if [ -f "$BACKUP_DIR/asdf/plugins.txt" ]; then
+        while IFS= read -r plugin; do
+            if [ -n "$plugin" ]; then
+                # Get plugin repository URL
+                plugin_dir="$HOME/.asdf/plugins/$plugin"
+                if [ -d "$plugin_dir/.git" ]; then
+                    url=$(cd "$plugin_dir" && git remote get-url origin 2>/dev/null || echo "")
+                    if [ -n "$url" ]; then
+                        echo "$plugin $url" >> "$BACKUP_DIR/asdf/plugin_urls.txt"
+                    else
+                        echo "$plugin" >> "$BACKUP_DIR/asdf/plugin_urls.txt"
+                    fi
+                else
+                    echo "$plugin" >> "$BACKUP_DIR/asdf/plugin_urls.txt"
+                fi
+            fi
+        done < "$BACKUP_DIR/asdf/plugins.txt"
+    fi
+
+    # Backup all installed versions for each plugin
+    echo "# Installed versions per plugin" > "$BACKUP_DIR/asdf/installed_versions.txt"
+    if [ -f "$BACKUP_DIR/asdf/plugins.txt" ]; then
+        while IFS= read -r plugin; do
+            if [ -n "$plugin" ]; then
+                versions=$(asdf list "$plugin" 2>/dev/null | sed 's/^[[:space:]]*//' | grep -v '^$' || echo "")
+                if [ -n "$versions" ]; then
+                    echo "[$plugin]" >> "$BACKUP_DIR/asdf/installed_versions.txt"
+                    echo "$versions" >> "$BACKUP_DIR/asdf/installed_versions.txt"
+                    echo "" >> "$BACKUP_DIR/asdf/installed_versions.txt"
+                fi
+            fi
+        done < "$BACKUP_DIR/asdf/plugins.txt"
+    fi
 
     # Backup .tool-versions if it exists
     if [ -f "$HOME/.tool-versions" ]; then
         cp "$HOME/.tool-versions" "$BACKUP_DIR/asdf/" || handle_error "ASDF tool-versions" "Could not copy .tool-versions"
     fi
+
+    # Backup global .tool-versions if different from home
+    if [ -f "$HOME/.tool-versions" ] && [ -f "$HOME/.asdf/.tool-versions" ]; then
+        if ! cmp -s "$HOME/.tool-versions" "$HOME/.asdf/.tool-versions"; then
+            cp "$HOME/.asdf/.tool-versions" "$BACKUP_DIR/asdf/.tool-versions-global" || handle_error "ASDF global tool-versions" "Could not copy global .tool-versions"
+        fi
+    elif [ -f "$HOME/.asdf/.tool-versions" ]; then
+        cp "$HOME/.asdf/.tool-versions" "$BACKUP_DIR/asdf/.tool-versions-global" || handle_error "ASDF global tool-versions" "Could not copy global .tool-versions"
+    fi
+
     echo "✅ ASDF configuration backed up"
 else
     echo "⚠️  ASDF not found, skipping..."

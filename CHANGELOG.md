@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2025-09-09
+
+### Added
+- **Enhanced ASDF Restoration**: Completely redesigned ASDF backup and restore functionality
+  - **System Dependencies Management**: Automatically installs compilation dependencies for common languages (Node.js, Python, Ruby, Erlang, etc.)
+  - **Plugin URL Backup**: Captures actual Git repository URLs for plugins to ensure proper restoration
+  - **Detailed Version Tracking**: Backs up all installed versions per plugin, not just current versions
+  - **Individual Tool Installation**: Installs each runtime individually with better error handling and recovery
+  - **Fallback Strategies**: Attempts to install latest version if specific version fails
+  - **Comprehensive Error Reporting**: Clear error messages and manual recovery instructions
+
+### Improved
+- **ASDF Plugin Installation**: Robust plugin installation with URL-based restoration and fallback mechanisms
+- **Runtime Compilation**: Proper handling of compilation dependencies and long build times
+- **Session Management**: Ensures ASDF is properly sourced in current shell session during restoration
+- **Error Recovery**: Graceful degradation when some tools fail, with clear instructions for manual fixes
+- **User Feedback**: Better progress indicators and time expectations for long-running operations
+
+### Fixed
+- **Plugin Installation Failures**: Resolved issues with plugins not installing due to missing URLs or dependencies
+- **Runtime Compilation Errors**: Fixed missing system dependencies that caused runtime compilation to fail
+- **Shell Environment Issues**: Proper ASDF environment setup in both current and future sessions
+
 ## [1.0.7] - 2025-09-09
 
 ### Added
@@ -61,7 +84,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Multiple Storage Options**: iCloud, Dropbox, Google Drive, Git repositories
 - **Security First**: Automatic exclusion of sensitive data from public repos
 
-[Unreleased]: https://github.com/jtanium/mac-rebuild/compare/v1.0.7...HEAD
+[Unreleased]: https://github.com/jtanium/mac-rebuild/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/jtanium/mac-rebuild/compare/v1.0.7...v1.1.0
 [1.0.7]: https://github.com/jtanium/mac-rebuild/compare/v1.0.6...v1.0.7
 [1.0.6]: https://github.com/jtanium/mac-rebuild/compare/v1.0.0...v1.0.6
 [1.0.0]: https://github.com/jtanium/mac-rebuild/releases/tag/v1.0.0

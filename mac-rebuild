@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # Mac Rebuild - Intelligent Mac development environment backup and restore tool
-# Version: 1.0.5
+# Version: 1.1.0
 
 set -e
 
-VERSION="1.0.5"
+VERSION="1.1.0"
 
 # Determine library directory based on installation method
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
