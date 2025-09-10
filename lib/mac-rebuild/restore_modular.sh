@@ -50,13 +50,21 @@ if [ -f "$BACKUP_DIR/enabled_plugins.txt" ]; then
     log "Loading plugin configuration from backup..."
     while IFS= read -r plugin_name; do
         if [ -n "$plugin_name" ] && [[ ! "$plugin_name" =~ ^# ]]; then
-            if [ "${PLUGINS[$plugin_name]:-}" = "1" ]; then
+            # Check if plugin exists in the loaded plugins list
+            if echo "$PLUGINS_LIST" | grep -q "\b$plugin_name\b"; then
                 enable_plugin "$plugin_name"
+                echo "✅ Enabled plugin: $plugin_name"
             else
                 echo "⚠️  Plugin $plugin_name not available in current system"
             fi
         fi
     done < "$BACKUP_DIR/enabled_plugins.txt"
+else
+    log "No plugin configuration found - enabling all available plugins"
+    # Enable all loaded plugins by default
+    for plugin_name in $(get_all_plugins); do
+        enable_plugin "$plugin_name"
+    done
 fi
 
 # Install Xcode Command Line Tools first
@@ -77,7 +85,7 @@ echo ""
 echo "🎉 Restore completed successfully!"
 echo ""
 echo "📋 Summary of restored components:"
-for plugin_name in "${!PLUGINS[@]}"; do
+for plugin_name in $(get_all_plugins); do
     if is_plugin_enabled "$plugin_name"; then
         echo "  ✅ $plugin_name: $(get_plugin_description "$plugin_name")"
     fi

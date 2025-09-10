@@ -310,5 +310,5 @@ plugin_status() {
     else
         echo "❌ Oh My Zsh is not installed"
     fi
-}
+}:wq
 
