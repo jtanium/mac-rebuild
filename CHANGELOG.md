@@ -1,5 +1,17 @@
 # Changelog
 
+## [v2.2.0] - 2025-09-09
+
+### Added
+Custom Fonts plugin
+iTerm plugin
+
+### Changed
+-
+
+### Fixed
+-
+
 All notable changes to Mac Rebuild will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
