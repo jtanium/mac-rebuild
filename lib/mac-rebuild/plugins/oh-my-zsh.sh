@@ -149,6 +149,4 @@ oh_my_zsh_show_restore_summary() {
     if [ -f "$backup_dir/custom_themes.txt" ] && [ -s "$backup_dir/custom_themes.txt" ]; then
         echo "   Custom Themes: $(cat "$backup_dir/custom_themes.txt" | tr '\n' ' ')"
     fi
-
-    echo "   💡 Remember to restart your terminal or run 'source ~/.zshrc' to apply changes"
 }

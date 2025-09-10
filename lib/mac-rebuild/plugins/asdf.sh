@@ -123,12 +123,18 @@ asdf_restore() {
         echo "Installing ASDF..."
         brew install asdf
 
-        # Add ASDF to shell configuration
-        echo ". $HOMEBREW_PREFIX/opt/asdf/libexec/asdf.sh" >> ~/.zshrc
+        # Add ASDF to shell configuration only if not already present
+        local asdf_init_line=". $HOMEBREW_PREFIX/opt/asdf/libexec/asdf.sh"
+        if [ -f ~/.zshrc ] && ! grep -Fq "$asdf_init_line" ~/.zshrc; then
+            echo "$asdf_init_line" >> ~/.zshrc
+        elif [ ! -f ~/.zshrc ]; then
+            # Create .zshrc if it doesn't exist
+            echo "$asdf_init_line" > ~/.zshrc
+        fi
 
         # Source ASDF for current session
         . "$HOMEBREW_PREFIX/opt/asdf/libexec/asdf.sh"
-        echo "✅ ASDF installed"
+        echo "✅ ASDF installed and configured"
     else
         # Make sure ASDF is available in current session
         . "$HOMEBREW_PREFIX/opt/asdf/libexec/asdf.sh" 2>/dev/null || true
