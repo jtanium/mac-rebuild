@@ -1,5 +1,16 @@
 # Changelog
 
+## [v2.2.2] - 2025-09-10
+
+### Added
+-
+
+### Changed
+-
+
+### Fixed
+- Fixed issue with restore not loading plugins
+
 ## [v2.2.1] - 2025-09-10
 
 ### Added
