@@ -150,3 +150,165 @@ oh_my_zsh_show_restore_summary() {
         echo "   Custom Themes: $(cat "$backup_dir/custom_themes.txt" | tr '\n' ' ')"
     fi
 }
+
+# Oh My Zsh plugin for mac-rebuild
+# Handles backup and restore of Oh My Zsh configuration
+
+PLUGIN_NAME="oh-my-zsh"
+PLUGIN_DESCRIPTION="Oh My Zsh shell framework configuration and custom themes/plugins"
+PLUGIN_PRIORITY=30
+
+plugin_enabled() {
+    [[ -d "$HOME/.oh-my-zsh" ]]
+}
+
+plugin_backup() {
+    local backup_dir="$1"
+
+    if [[ ! -d "$HOME/.oh-my-zsh" ]]; then
+        echo "Oh My Zsh not found, skipping backup"
+        return 0
+    fi
+
+    echo "Backing up Oh My Zsh configuration..."
+
+    # Create backup directory
+    mkdir -p "$backup_dir/oh-my-zsh"
+
+    # Backup custom themes and plugins
+    if [[ -d "$HOME/.oh-my-zsh/custom" ]]; then
+        cp -r "$HOME/.oh-my-zsh/custom" "$backup_dir/oh-my-zsh/"
+    fi
+
+    # Backup .zshrc for Oh My Zsh settings
+    if [[ -f "$HOME/.zshrc" ]]; then
+        cp "$HOME/.zshrc" "$backup_dir/oh-my-zsh/"
+    fi
+
+    # Create a manifest of installed plugins and themes
+    {
+        echo "# Oh My Zsh Backup Manifest"
+        echo "# Generated on $(date)"
+        echo ""
+
+        if [[ -f "$HOME/.zshrc" ]]; then
+            echo "# Active theme:"
+            grep "^ZSH_THEME=" "$HOME/.zshrc" || echo "ZSH_THEME=robbyrussell"
+            echo ""
+
+            echo "# Active plugins:"
+            grep "^plugins=" "$HOME/.zshrc" || echo "plugins=(git)"
+            echo ""
+        fi
+
+        echo "# Custom themes available:"
+        if [[ -d "$HOME/.oh-my-zsh/custom/themes" ]]; then
+            ls -1 "$HOME/.oh-my-zsh/custom/themes"/*.zsh-theme 2>/dev/null | xargs -I {} basename {} .zsh-theme || echo "None"
+        else
+            echo "None"
+        fi
+        echo ""
+
+        echo "# Custom plugins available:"
+        if [[ -d "$HOME/.oh-my-zsh/custom/plugins" ]]; then
+            ls -1 "$HOME/.oh-my-zsh/custom/plugins" 2>/dev/null || echo "None"
+        else
+            echo "None"
+        fi
+    } > "$backup_dir/oh-my-zsh/manifest.txt"
+
+    echo "✅ Oh My Zsh configuration backed up"
+    return 0
+}
+
+plugin_restore() {
+    local backup_dir="$1"
+
+    echo "Restoring Oh My Zsh configuration..."
+
+    # Check if Oh My Zsh backup exists
+    if [[ ! -d "$backup_dir/oh-my-zsh" ]]; then
+        echo "No Oh My Zsh backup found, skipping restore"
+        return 0
+    fi
+
+    # Install Oh My Zsh if not present
+    if [[ ! -d "$HOME/.oh-my-zsh" ]]; then
+        echo "Installing Oh My Zsh..."
+
+        # Download and install Oh My Zsh
+        if command -v curl >/dev/null; then
+            sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+        elif command -v wget >/dev/null; then
+            sh -c "$(wget https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh -O -)" "" --unattended
+        else
+            echo "❌ Error: curl or wget required to install Oh My Zsh"
+            return 1
+        fi
+
+        if [[ ! -d "$HOME/.oh-my-zsh" ]]; then
+            echo "❌ Error: Oh My Zsh installation failed"
+            return 1
+        fi
+
+        echo "✅ Oh My Zsh installed successfully"
+    fi
+
+    # Restore custom configuration
+    if [[ -d "$backup_dir/oh-my-zsh/custom" ]]; then
+        echo "Restoring custom themes and plugins..."
+        cp -r "$backup_dir/oh-my-zsh/custom"/* "$HOME/.oh-my-zsh/custom/" 2>/dev/null || true
+    fi
+
+    # Restore .zshrc if it exists in backup
+    if [[ -f "$backup_dir/oh-my-zsh/.zshrc" ]]; then
+        echo "Restoring .zshrc configuration..."
+
+        # Backup existing .zshrc if it exists
+        if [[ -f "$HOME/.zshrc" ]]; then
+            cp "$HOME/.zshrc" "$HOME/.zshrc.backup.$(date +%Y%m%d_%H%M%S)"
+        fi
+
+        cp "$backup_dir/oh-my-zsh/.zshrc" "$HOME/"
+    fi
+
+    # Show restore summary
+    if [[ -f "$backup_dir/oh-my-zsh/manifest.txt" ]]; then
+        echo ""
+        echo "📋 Oh My Zsh Restore Summary:"
+        cat "$backup_dir/oh-my-zsh/manifest.txt"
+        echo ""
+    fi
+
+    echo "✅ Oh My Zsh configuration restored"
+    echo "💡 Run 'source ~/.zshrc' or restart your terminal to apply changes"
+
+    return 0
+}
+
+plugin_status() {
+    if [[ -d "$HOME/.oh-my-zsh" ]]; then
+        echo "✅ Oh My Zsh is installed"
+
+        if [[ -f "$HOME/.zshrc" ]]; then
+            local theme=$(grep "^ZSH_THEME=" "$HOME/.zshrc" 2>/dev/null | cut -d'"' -f2 || echo "unknown")
+            local plugins=$(grep "^plugins=" "$HOME/.zshrc" 2>/dev/null | sed 's/plugins=(//' | sed 's/)//' || echo "unknown")
+
+            echo "   Theme: $theme"
+            echo "   Plugins: $plugins"
+
+            if [[ -d "$HOME/.oh-my-zsh/custom/themes" ]]; then
+                local custom_themes=$(ls -1 "$HOME/.oh-my-zsh/custom/themes"/*.zsh-theme 2>/dev/null | wc -l | tr -d ' ')
+                echo "   Custom themes: $custom_themes"
+            fi
+
+            if [[ -d "$HOME/.oh-my-zsh/custom/plugins" ]]; then
+                local custom_plugins=$(ls -1 "$HOME/.oh-my-zsh/custom/plugins" 2>/dev/null | wc -l | tr -d ' ')
+                echo "   Custom plugins: $custom_plugins"
+            fi
+        fi
+    else
+        echo "❌ Oh My Zsh is not installed"
+    fi
+}
+

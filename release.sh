@@ -259,11 +259,11 @@ calculate_tarball_sha() {
 
     log "Calculating SHA256 for release tarball..."
 
-    # Download and calculate SHA256
-    local sha=$(curl -sL "$url" | shasum -a 256 | cut -d' ' -f1)
+    # Download and calculate SHA256, ensuring clean output
+    local sha=$(curl -sL "$url" | shasum -a 256 | cut -d' ' -f1 | tr -d '\n\r' | sed 's/[^a-f0-9]//g')
 
-    if [[ -z "$sha" ]]; then
-        error "Failed to calculate SHA256 for $url"
+    if [[ -z "$sha" ]] || [[ ${#sha} -ne 64 ]]; then
+        error "Failed to calculate valid SHA256 for $url (got: '$sha')"
     fi
 
     echo "$sha"

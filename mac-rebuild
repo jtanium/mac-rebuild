@@ -357,9 +357,7 @@ cmd_restore() {
         return 1
     fi
 
-    # Always check for Time Machine backup before restoring (most risky operation)
-    check_time_machine_backup
-    show_safety_disclaimer
+    log "Starting restore from: $source"
 
     # Determine source type and handle accordingly
     if [[ -d "$source" ]]; then
