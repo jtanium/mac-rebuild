@@ -1,5 +1,16 @@
 # Changelog
 
+## [v2.2.3] - 2025-09-11
+
+### Added
+-
+
+### Changed
+-
+
+### Fixed
+- Fixing issues with Oh My Zsh restore
+
 ## [v2.2.2] - 2025-09-10
 
 ### Added
