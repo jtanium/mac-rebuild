@@ -3,7 +3,15 @@
 ## [v2.2.8] - 2025-09-11
 
 ### Added
--
+- **Docker Desktop Plugin**: Comprehensive backup and restore support for Docker Desktop
+  - Backs up Docker Desktop settings, preferences, and daemon configuration
+  - Interactive backup of containers, images, and volumes with selective options
+  - Automatic detection of Docker Desktop installation (app bundle, Homebrew, or CLI)
+  - Volume data preservation using tar archives
+  - Docker network configuration backup for manual recreation
+  - Automatic search and backup of docker-compose files
+  - Smart installation during restore via Homebrew if Docker Desktop is missing
+  - Graceful handling when Docker daemon is not running
 
 ### Changed
 -

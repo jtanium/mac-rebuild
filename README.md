@@ -10,7 +10,7 @@ A **modular, plugin-based** Mac development environment backup and restore tool 
 - **🔧 Modular Plugin Architecture**: Each component (Homebrew, ASDF, VS Code, JetBrains, etc.) is now an isolated plugin
 - **🎯 Enhanced JetBrains Support**: Automatically detects and restores IDEs via Homebrew
 - **⚡ Enhanced ASDF Plugin**: System dependencies, URL-based plugin backup, fallback strategies
-- **📦 7 Core Plugins**: Ready-to-use plugins for all major development tools
+- **📦 8 Core Plugins**: Ready-to-use plugins for all major development tools
 - **🔍 Plugin Management**: `mac-rebuild plugins` command to see what's available
 - **🚀 Simplified Interface**: Clean commands - no more complex flags
 - **🔌 Easy Extensibility**: Add new tools by creating simple plugin files
@@ -61,7 +61,7 @@ brew install mac-rebuild
 ### Verify Installation
 ```bash
 mac-rebuild --version    # Should show "Mac Rebuild v2.0.0"
-mac-rebuild plugins      # Should show 7 core plugins
+mac-rebuild plugins      # Should show 8 core plugins
 mac-rebuild --help       # Should mention modular plugin-based architecture
 ```
 
@@ -281,6 +281,7 @@ Mac Rebuild v2.0 includes these core plugins out of the box:
 | **homebrew** | 10 | Manages Homebrew packages, casks, and taps |
 | **asdf** | 20 | Enhanced ASDF support with system dependencies |
 | **applications** | 30 | App Store applications and application inventories |
+| **docker** | 35 | Docker Desktop settings, containers, images, and volumes |
 | **vscode** | 40 | Visual Studio Code settings, extensions, and keybindings |
 | **jetbrains** | 45 | JetBrains IDE configurations, settings, and applications |
 | **dotfiles** | 50 | Important dotfiles and configuration files |
