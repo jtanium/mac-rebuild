@@ -78,12 +78,24 @@ oh_my_zsh_restore() {
     if ! oh_my_zsh_detect; then
         echo "Installing Oh My Zsh..."
 
-        # Install OMZ non-interactively
+        # Install OMZ non-interactively with better error handling
         export RUNZSH=no
         export CHSH=no
-        sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" || handle_error "Oh My Zsh installation" "Could not install Oh My Zsh"
 
-        echo "✅ Oh My Zsh installed"
+        # Use the canonical GitHub URL and add debugging
+        echo "Downloading Oh My Zsh installation script..."
+        if ! curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh | sh; then
+            handle_error "Oh My Zsh installation" "Could not install Oh My Zsh - check internet connection and try again"
+            return 1
+        fi
+
+        # Verify installation succeeded
+        if oh_my_zsh_detect; then
+            echo "✅ Oh My Zsh installed successfully"
+        else
+            handle_error "Oh My Zsh installation" "Installation appeared to succeed but Oh My Zsh not found"
+            return 1
+        fi
     else
         echo "✅ Oh My Zsh already installed"
     fi
@@ -150,4 +162,3 @@ oh_my_zsh_show_restore_summary() {
         echo "   Custom Themes: $(cat "$backup_dir/custom_themes.txt" | tr '\n' ' ')"
     fi
 }
-

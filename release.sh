@@ -234,21 +234,32 @@ update_homebrew_formula() {
 
     cd "$HOMEBREW_REPO_DIR"
 
-    # Escape the SHA value to prevent sed interpretation issues
-    local escaped_sha=$(printf '%s\n' "$sha" | sed 's/[[\.*^$()+?{|]/\\&/g')
+    # Clean the SHA value - remove any whitespace/newlines
+    sha=$(echo "$sha" | tr -d '\n\r\t ' | head -c 64)
 
-    # Update the formula file using a safer approach
+    # Validate the SHA is exactly 64 hex characters
+    if [[ ! "$sha" =~ ^[a-f0-9]{64}$ ]]; then
+        error "Invalid SHA256 format: '$sha'"
+    fi
+
+    log "Using SHA256: $sha"
+
+    # Update URL first
     sed -i.bak \
-        -e "s|url \".*\"|url \"https://github.com/jtanium/mac-rebuild/archive/refs/tags/$version.tar.gz\"|" \
+        "s|url \".*\"|url \"https://github.com/jtanium/mac-rebuild/archive/refs/tags/$version.tar.gz\"|" \
         "$FORMULA_FILE"
 
-    # Use a separate sed command for SHA to avoid delimiter conflicts
-    sed -i.bak2 \
-        -e "s/sha256 \"[^\"]*\"/sha256 \"$escaped_sha\"/" \
-        "$FORMULA_FILE"
+    # Update SHA256 using a different approach - use awk to avoid sed issues
+    awk -v new_sha="$sha" '
+        /^  sha256 / {
+            print "  sha256 \"" new_sha "\""
+            next
+        }
+        { print }
+    ' "$FORMULA_FILE" > "$FORMULA_FILE.tmp" && mv "$FORMULA_FILE.tmp" "$FORMULA_FILE"
 
-    # Remove backup files
-    rm -f "$FORMULA_FILE.bak" "$FORMULA_FILE.bak2"
+    # Remove backup file
+    rm -f "$FORMULA_FILE.bak"
 
     # Show the changes
     log "Formula changes:"
