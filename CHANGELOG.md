@@ -1,5 +1,16 @@
 # Changelog
 
+## [v2.2.4] - 2025-09-11
+
+### Added
+-
+
+### Changed
+-
+
+### Fixed
+- More OMZ fixes
+
 ## [v2.2.3] - 2025-09-11
 
 ### Added
