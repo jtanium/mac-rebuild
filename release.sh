@@ -14,7 +14,7 @@ NC='\033[0m' # No Color
 
 # Configuration
 MAIN_REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-HOMEBREW_REPO_DIR="../homebrew-mac-rebuild"
+HOMEBREW_REPO_DIR="$MAIN_REPO_DIR/../homebrew-mac-rebuild"
 FORMULA_FILE="$HOMEBREW_REPO_DIR/Formula/mac-rebuild.rb"
 
 # Utility functions
