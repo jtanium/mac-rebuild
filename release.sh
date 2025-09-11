@@ -314,7 +314,14 @@ commit_and_push_formula() {
 
     cd "$HOMEBREW_REPO_DIR"
 
-    git add "$FORMULA_FILE"
+    # Ensure we're in the right directory and the file exists
+    if [[ ! -f "Formula/mac-rebuild.rb" ]]; then
+        cd "$MAIN_REPO_DIR"
+        error "Formula file not found in homebrew repository: $HOMEBREW_REPO_DIR/Formula/mac-rebuild.rb"
+    fi
+
+    # Add the formula file using relative path
+    git add Formula/mac-rebuild.rb
     git commit -m "Update mac-rebuild to $version"
     git push origin main
 
