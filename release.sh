@@ -234,14 +234,21 @@ update_homebrew_formula() {
 
     cd "$HOMEBREW_REPO_DIR"
 
-    # Update the formula file
+    # Escape the SHA value to prevent sed interpretation issues
+    local escaped_sha=$(printf '%s\n' "$sha" | sed 's/[[\.*^$()+?{|]/\\&/g')
+
+    # Update the formula file using a safer approach
     sed -i.bak \
         -e "s|url \".*\"|url \"https://github.com/jtanium/mac-rebuild/archive/refs/tags/$version.tar.gz\"|" \
-        -e "s|sha256 \".*\"|sha256 \"$sha\"|" \
         "$FORMULA_FILE"
 
-    # Remove backup file
-    rm -f "$FORMULA_FILE.bak"
+    # Use a separate sed command for SHA to avoid delimiter conflicts
+    sed -i.bak2 \
+        -e "s/sha256 \"[^\"]*\"/sha256 \"$escaped_sha\"/" \
+        "$FORMULA_FILE"
+
+    # Remove backup files
+    rm -f "$FORMULA_FILE.bak" "$FORMULA_FILE.bak2"
 
     # Show the changes
     log "Formula changes:"

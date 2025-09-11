@@ -85,7 +85,7 @@ echo ""
 echo "🎉 Restore completed successfully!"
 echo ""
 echo "📋 Summary of restored components:"
-for plugin_name in $(get_all_plugins); do
+ for plugin_name in $(get_all_plugins); do
     if is_plugin_enabled "$plugin_name"; then
         echo "  ✅ $plugin_name: $(get_plugin_description "$plugin_name")"
     fi
