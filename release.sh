@@ -278,7 +278,12 @@ calculate_tarball_sha() {
     log "Calculating SHA256 for release tarball..."
 
     # Download and calculate SHA256, ensuring clean output
-    local sha=$(curl -sL "$url" | shasum -a 256 | awk '{print $1}')
+    # Use a separate subshell to avoid any output contamination
+    local sha
+    sha=$(curl -sL "$url" 2>/dev/null | shasum -a 256 2>/dev/null | awk '{print $1}')
+
+    # Clean and validate the SHA
+    sha=$(echo "$sha" | tr -d '\n\r\t ' | head -c 64)
 
     # Validate the SHA is exactly 64 hex characters
     if [[ ! "$sha" =~ ^[a-f0-9]{64}$ ]]; then
