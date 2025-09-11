@@ -275,21 +275,34 @@ calculate_tarball_sha() {
     local version="$1"
     local url="https://github.com/jtanium/mac-rebuild/archive/refs/tags/$version.tar.gz"
 
-    log "Calculating SHA256 for release tarball..."
+    # Create a temporary file to store the download
+    local temp_file="/tmp/mac_rebuild_tarball_$$"
 
-    # Download and calculate SHA256, ensuring clean output
-    # Use a separate subshell to avoid any output contamination
-    local sha
-    sha=$(curl -sL "$url" 2>/dev/null | shasum -a 256 2>/dev/null | awk '{print $1}')
+    # Write to stderr to avoid contamination, then redirect to /dev/null in the main script
+    echo "Downloading tarball from $url..." >&2
 
-    # Clean and validate the SHA
-    sha=$(echo "$sha" | tr -d '\n\r\t ' | head -c 64)
-
-    # Validate the SHA is exactly 64 hex characters
-    if [[ ! "$sha" =~ ^[a-f0-9]{64}$ ]]; then
-        error "Failed to calculate valid SHA256 for $url (got: '$sha')"
+    # Download to temporary file first
+    if ! curl -sL "$url" -o "$temp_file" 2>/dev/null; then
+        rm -f "$temp_file"
+        return 1
     fi
 
+    # Calculate SHA256 from the file
+    local sha
+    sha=$(shasum -a 256 "$temp_file" 2>/dev/null | cut -d' ' -f1)
+
+    # Clean up temporary file
+    rm -f "$temp_file"
+
+    # Clean the SHA and validate
+    sha=$(echo "$sha" | tr -d '\n\r\t ' | head -c 64)
+
+    if [[ ! "$sha" =~ ^[a-f0-9]{64}$ ]]; then
+        echo "Failed to calculate SHA256" >&2
+        return 1
+    fi
+
+    # Only output the SHA to stdout
     echo "$sha"
 }
 
@@ -382,7 +395,15 @@ EOF
     sleep 10
 
     # Calculate SHA256 of release tarball
-    local tarball_sha=$(calculate_tarball_sha "$new_version")
+    log "Calculating SHA256 for release tarball..."
+    local tarball_sha
+    tarball_sha=$(calculate_tarball_sha "$new_version" 2>/dev/null)
+
+    if [[ -z "$tarball_sha" ]]; then
+        error "Failed to calculate SHA256 for release tarball"
+    fi
+
+    log "Calculated SHA256: $tarball_sha"
 
     # Update Homebrew formula
     update_homebrew_formula "$new_version" "$tarball_sha"
