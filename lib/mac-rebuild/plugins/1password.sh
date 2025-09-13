@@ -72,10 +72,20 @@
         return 0
     fi
 
-    # Ensure 1Password is installed
+    # Ensure 1Password is installed (install if missing)
     if ! 1password_detect; then
-        echo "⚠️  1Password not installed, skipping configuration restore..."
-        return 0
+        if ask_yes_no "1Password not found. Install it now?" "y"; then
+            if command -v brew &>/dev/null; then
+                brew install --cask 1password || handle_error "1Password installation" "Could not install 1Password"
+                echo "✅ 1Password installed"
+            else
+                echo "❌ Homebrew not available. Please install 1Password manually from https://1password.com/"
+                return 1
+            fi
+        else
+            echo "Skipping 1Password restore without 1Password installed"
+            return 0
+        fi
     fi
 
     # Restore group containers

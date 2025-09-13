@@ -78,10 +78,20 @@ vscode_restore() {
         return 0
     fi
 
-    # Ensure VS Code is installed (it should be via Homebrew at this point)
+    # Ensure VS Code is installed (install if missing)
     if ! vscode_detect; then
-        echo "⚠️  VS Code not installed, skipping configuration restore..."
-        return 0
+        if ask_yes_no "VS Code not found. Install it now?" "y"; then
+            if command -v brew &>/dev/null; then
+                brew install --cask visual-studio-code || handle_error "VS Code installation" "Could not install VS Code"
+                echo "✅ VS Code installed"
+            else
+                echo "❌ Homebrew not available. Please install VS Code manually from https://code.visualstudio.com/"
+                return 1
+            fi
+        else
+            echo "Skipping VS Code restore without VS Code installed"
+            return 0
+        fi
     fi
 
     # Find VS Code user directory

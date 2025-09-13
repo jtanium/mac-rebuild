@@ -106,10 +106,17 @@ xcode_restore() {
         return 0
     fi
 
-    # Ensure Xcode is installed
+    # Ensure Xcode is installed (install if missing)
     if ! xcode_detect; then
-        echo "⚠️  Xcode not installed, skipping configuration restore..."
-        return 0
+        if ask_yes_no "Xcode not found. Install it now?" "y"; then
+            echo "⚠️  Xcode must be installed manually from the Mac App Store"
+            echo "   Please install Xcode from the Mac App Store and then re-run restore"
+            echo "   Alternatively, you can install Xcode Command Line Tools only with: xcode-select --install"
+            return 1
+        else
+            echo "Skipping Xcode restore without Xcode installed"
+            return 0
+        fi
     fi
 
     # Restore preferences

@@ -72,10 +72,20 @@ postman_restore() {
         return 0
     fi
 
-    # Ensure Postman is installed
+    # Ensure Postman is installed (install if missing)
     if ! postman_detect; then
-        echo "⚠️  Postman not installed, skipping configuration restore..."
-        return 0
+        if ask_yes_no "Postman not found. Install it now?" "y"; then
+            if command -v brew &>/dev/null; then
+                brew install --cask postman || handle_error "Postman installation" "Could not install Postman"
+                echo "✅ Postman installed"
+            else
+                echo "❌ Homebrew not available. Please install Postman manually from https://www.postman.com/"
+                return 1
+            fi
+        else
+            echo "Skipping Postman restore without Postman installed"
+            return 0
+        fi
     fi
 
     # Restore application support

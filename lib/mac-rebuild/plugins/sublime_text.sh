@@ -96,10 +96,20 @@ sublime_text_restore() {
         return 0
     fi
 
-    # Ensure Sublime Text is installed
+    # Ensure Sublime Text is installed (install if missing)
     if ! sublime_text_detect; then
-        echo "⚠️  Sublime Text not installed, skipping configuration restore..."
-        return 0
+        if ask_yes_no "Sublime Text not found. Install it now?" "y"; then
+            if command -v brew &>/dev/null; then
+                brew install --cask sublime-text || handle_error "Sublime Text installation" "Could not install Sublime Text"
+                echo "✅ Sublime Text installed"
+            else
+                echo "❌ Homebrew not available. Please install Sublime Text manually from https://www.sublimetext.com/"
+                return 1
+            fi
+        else
+            echo "Skipping Sublime Text restore without Sublime Text installed"
+            return 0
+        fi
     fi
 
     # Restore settings for each backed up version

@@ -83,10 +83,20 @@ android_studio_restore() {
         return 0
     fi
 
-    # Ensure Android Studio is installed
+    # Ensure Android Studio is installed (install if missing)
     if ! android_studio_detect; then
-        echo "⚠️  Android Studio not installed, skipping configuration restore..."
-        return 0
+        if ask_yes_no "Android Studio not found. Install it now?" "y"; then
+            if command -v brew &>/dev/null; then
+                brew install --cask android-studio || handle_error "Android Studio installation" "Could not install Android Studio"
+                echo "✅ Android Studio installed"
+            else
+                echo "❌ Homebrew not available. Please install Android Studio manually from https://developer.android.com/studio"
+                return 1
+            fi
+        else
+            echo "Skipping Android Studio restore without Android Studio installed"
+            return 0
+        fi
     fi
 
     # Restore settings
