@@ -249,6 +249,11 @@ update_homebrew_formula() {
         "s|url \".*\"|url \"https://github.com/jtanium/mac-rebuild/archive/refs/tags/$version.tar.gz\"|" \
         "$FORMULA_FILE"
 
+    # Update version field
+    sed -i.bak2 \
+        "s|version \".*\"|version \"${version#v}\"|" \
+        "$FORMULA_FILE"
+
     # Update SHA256 using a different approach - use awk to avoid sed issues
     awk -v new_sha="$sha" '
         /^  sha256 / {
@@ -258,8 +263,8 @@ update_homebrew_formula() {
         { print }
     ' "$FORMULA_FILE" > "$FORMULA_FILE.tmp" && mv "$FORMULA_FILE.tmp" "$FORMULA_FILE"
 
-    # Remove backup file
-    rm -f "$FORMULA_FILE.bak"
+    # Remove backup files
+    rm -f "$FORMULA_FILE.bak" "$FORMULA_FILE.bak2"
 
     # Show the changes
     log "Formula changes:"
