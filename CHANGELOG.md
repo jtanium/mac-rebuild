@@ -12,6 +12,24 @@
   - Automatic search and backup of docker-compose files
   - Smart installation during restore via Homebrew if Docker Desktop is missing
   - Graceful handling when Docker daemon is not running
+  - **⚠️  TESTING NEEDED**: This plugin requires thorough testing with various Docker setups
+- **TablePlus Plugin**: Complete backup and restore support for TablePlus database tool
+  - Backs up encrypted database connections and credentials
+  - Preserves custom themes, preferences, and window layouts
+  - Supports custom queries/snippets and license information
+  - Automatic TablePlus installation via Homebrew during restore
+  - Secure handling of sensitive database connection data
+- **Browser Plugins Suite**: Individual plugins for major web browsers
+  - **Chrome Plugin**: Bookmarks, extensions, preferences, login data, and history
+  - **Brave Plugin**: Bookmarks, Brave Rewards, Shields settings, and user data
+  - **Arc Plugin**: Spaces, sidebar configuration, bookmarks, and Arc-specific features
+  - **Vivaldi Plugin**: Workspaces, notes, UI customizations, and themes
+  - **Opera Plugin**: Workspaces, speed dial, sidebar messengers, and preferences
+  - **Firefox Plugin**: Bookmarks, extensions, preferences, form history, and login data
+  - **Safari Plugin**: Bookmarks, reading list, top sites, and browser preferences
+  - All browser plugins support selective backup of sensitive data (passwords, history, cookies)
+  - Automatic browser installation via Homebrew during restore (except Safari - built into macOS)
+  - Smart detection of running browsers with graceful closure prompts
 
 ### Changed
 -

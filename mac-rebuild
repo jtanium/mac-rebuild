@@ -188,6 +188,18 @@ setup_backup_local() {
 
 # Function to check Time Machine backup status
 check_time_machine_backup() {
+    # Skip Time Machine checks in test mode
+    if [[ "$MAC_REBUILD_TEST_MODE" == "1" ]]; then
+        log "⚠️  Running in test mode - skipping Time Machine backup check"
+        return 0
+    fi
+
+    # Skip checks in non-interactive mode if explicitly disabled
+    if [[ "$MAC_REBUILD_NON_INTERACTIVE" == "1" && "$MAC_REBUILD_SKIP_TIME_MACHINE_CHECK" == "1" ]]; then
+        log "⚠️  Non-interactive mode with Time Machine check disabled"
+        return 0
+    fi
+
     echo ""
     error "🛡️  IMPORTANT SAFETY CHECK"
     echo ""
@@ -218,6 +230,13 @@ check_time_machine_backup() {
     echo "4. Verify backup completed successfully"
     echo ""
 
+    # Handle non-interactive mode
+    if [[ "$MAC_REBUILD_NON_INTERACTIVE" == "1" ]]; then
+        error "❌ Running in non-interactive mode without Time Machine backup confirmation"
+        echo "Set MAC_REBUILD_SKIP_TIME_MACHINE_CHECK=1 to bypass this check (not recommended)"
+        exit 1
+    fi
+
     while true; do
         read -p "Have you created a complete Time Machine backup? (yes/no): " response
         case $response in
@@ -244,6 +263,18 @@ check_time_machine_backup() {
 
 # Function to show data loss disclaimer
 show_safety_disclaimer() {
+    # Skip disclaimer in test mode
+    if [[ "$MAC_REBUILD_TEST_MODE" == "1" ]]; then
+        log "⚠️  Running in test mode - skipping safety disclaimer"
+        return 0
+    fi
+
+    # Skip disclaimer in non-interactive mode if explicitly disabled
+    if [[ "$MAC_REBUILD_NON_INTERACTIVE" == "1" && "$MAC_REBUILD_SKIP_SAFETY_DISCLAIMER" == "1" ]]; then
+        log "⚠️  Non-interactive mode with safety disclaimer disabled"
+        return 0
+    fi
+
     echo ""
     warn "🚨 DATA LOSS RISK DISCLAIMER"
     echo ""
@@ -261,6 +292,13 @@ show_safety_disclaimer() {
     echo "• You accept full responsibility for any data loss"
     echo "• You will not hold the authors liable for damages"
     echo ""
+
+    # Handle non-interactive mode
+    if [[ "$MAC_REBUILD_NON_INTERACTIVE" == "1" ]]; then
+        error "❌ Running in non-interactive mode without safety disclaimer confirmation"
+        echo "Set MAC_REBUILD_SKIP_SAFETY_DISCLAIMER=1 to bypass this check (not recommended)"
+        exit 1
+    fi
 
     read -p "Do you understand and accept these risks? (yes/no): " response
     case $response in
@@ -297,6 +335,37 @@ cmd_backup() {
     # Always check for Time Machine backup before creating new backup
     check_time_machine_backup
     show_safety_disclaimer
+
+    # Handle test mode automatically
+    if [[ "$MAC_REBUILD_TEST_MODE" == "1" ]]; then
+        log "⚠️  Running in test mode - using automatic backup directory"
+        local test_backup_dir="${MAC_REBUILD_BACKUP_DIR:-/tmp/mac-rebuild-test-backup}"
+        mkdir -p "$test_backup_dir"
+
+        log "Setting up test backup..."
+        info "📁 Test backup directory: $test_backup_dir"
+
+        SCRIPT_DIR="$LIB_DIR" BACKUP_DIR="$test_backup_dir" "$LIB_DIR/backup_modular.sh"
+
+        log "✅ Test backup completed!"
+        info "📁 Location: $test_backup_dir"
+        return 0
+    fi
+
+    # Handle non-interactive mode
+    if [[ "$MAC_REBUILD_NON_INTERACTIVE" == "1" ]]; then
+        local backup_dir="${MAC_REBUILD_BACKUP_DIR:-$HOME/.mac-rebuild/backup}"
+        mkdir -p "$backup_dir"
+
+        log "Setting up non-interactive backup..."
+        info "📁 Backup directory: $backup_dir"
+
+        SCRIPT_DIR="$LIB_DIR" BACKUP_DIR="$backup_dir" "$LIB_DIR/backup_modular.sh"
+
+        log "✅ Non-interactive backup completed!"
+        info "📁 Location: $backup_dir"
+        return 0
+    fi
 
     recommend_storage_approach
 

@@ -10,7 +10,7 @@ A **modular, plugin-based** Mac development environment backup and restore tool 
 - **🔧 Modular Plugin Architecture**: Each component (Homebrew, ASDF, VS Code, JetBrains, etc.) is now an isolated plugin
 - **🎯 Enhanced JetBrains Support**: Automatically detects and restores IDEs via Homebrew
 - **⚡ Enhanced ASDF Plugin**: System dependencies, URL-based plugin backup, fallback strategies
-- **📦 8 Core Plugins**: Ready-to-use plugins for all major development tools
+- **📦 14 Core Plugins**: Ready-to-use plugins for all major development tools
 - **🔍 Plugin Management**: `mac-rebuild plugins` command to see what's available
 - **🚀 Simplified Interface**: Clean commands - no more complex flags
 - **🔌 Easy Extensibility**: Add new tools by creating simple plugin files
@@ -284,10 +284,16 @@ Mac Rebuild v2.0 includes these core plugins out of the box:
 | **docker** | 35 | Docker Desktop settings, containers, images, and volumes |
 | **vscode** | 40 | Visual Studio Code settings, extensions, and keybindings |
 | **jetbrains** | 45 | JetBrains IDE configurations, settings, and applications |
-| **dotfiles** | 50 | Important dotfiles and configuration files |
-| **ssh** | 60 | SSH keys and configuration (handle with care) |
-
-### 🔍 View Available Plugins
+| **tableplus** | 45 | TablePlus database connections, themes, and preferences |
+| **chrome** | 50 | Google Chrome bookmarks, extensions, and preferences |
+| **brave** | 51 | Brave Browser bookmarks, Brave Rewards, and settings |
+| **arc** | 52 | Arc Browser spaces, sidebar configuration, and bookmarks |
+| **vivaldi** | 53 | Vivaldi Browser workspaces, notes, and UI customizations |
+| **opera** | 54 | Opera Browser workspaces, speed dial, and sidebar messengers |
+| **firefox** | 55 | Firefox Browser bookmarks, extensions, and preferences |
+| **safari** | 56 | Safari Browser bookmarks, reading list, and preferences |
+| **dotfiles** | 60 | Important dotfiles and configuration files |
+| **ssh** | 70 | SSH keys and configuration (handle with care) |
 ```bash
 mac-rebuild plugins
 ```

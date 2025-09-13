@@ -69,7 +69,11 @@ fi
 
 # Install Xcode Command Line Tools first
 log "Installing Xcode Command Line Tools..."
-if ! xcode-select -p &>/dev/null; then
+
+# Skip Xcode installation in test mode
+if [[ "$MAC_REBUILD_TEST_MODE" == "1" ]]; then
+    log "⚠️  Running in test mode - skipping Xcode Command Line Tools installation"
+elif ! xcode-select -p &>/dev/null; then
     echo "Installing Xcode Command Line Tools (this may take a while)..."
     xcode-select --install
     echo "⏳ Please complete the Xcode Command Line Tools installation and press Enter to continue..."

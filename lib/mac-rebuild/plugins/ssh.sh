@@ -22,7 +22,14 @@ ssh_backup() {
 
     local backup_dir="$BACKUP_DIR/ssh_keys"
 
-    if ask_yes_no "Found SSH keys. Include in backup? (Handle with care!)" "y"; then
+    # Handle test mode automatically
+    if [[ "$MAC_REBUILD_TEST_MODE" == "1" ]]; then
+        log "⚠️  Running in test mode - automatically including SSH keys"
+        mkdir -p "$backup_dir"
+        cp -r "$HOME/.ssh" "$backup_dir/" 2>/dev/null || handle_error "SSH keys" "Could not copy SSH directory"
+        echo "✅ SSH keys backed up (handle with care!)"
+        echo "INCLUDE_SSH:true" >> "$USER_PREFS"
+    elif ask_yes_no "Found SSH keys. Include in backup? (Handle with care!)" "y"; then
         mkdir -p "$backup_dir"
         cp -r "$HOME/.ssh" "$backup_dir/" 2>/dev/null || handle_error "SSH keys" "Could not copy SSH directory"
         echo "✅ SSH keys backed up (handle with care!)"
