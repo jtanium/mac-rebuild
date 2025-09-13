@@ -10,7 +10,7 @@ A **modular, plugin-based** Mac development environment backup and restore tool 
 - **🔧 Modular Plugin Architecture**: Each component (Homebrew, ASDF, VS Code, JetBrains, etc.) is now an isolated plugin
 - **🎯 Enhanced JetBrains Support**: Automatically detects and restores IDEs via Homebrew
 - **⚡ Enhanced ASDF Plugin**: System dependencies, URL-based plugin backup, fallback strategies
-- **📦 14 Core Plugins**: Ready-to-use plugins for all major development tools
+- **📦 19 Core Plugins**: Ready-to-use plugins for all major development tools
 - **🔍 Plugin Management**: `mac-rebuild plugins` command to see what's available
 - **🚀 Simplified Interface**: Clean commands - no more complex flags
 - **🔌 Easy Extensibility**: Add new tools by creating simple plugin files
@@ -280,12 +280,17 @@ Mac Rebuild v2.0 includes these core plugins out of the box:
 |--------|----------|-------------|
 | **homebrew** | 10 | Manages Homebrew packages, casks, and taps |
 | **asdf** | 20 | Enhanced ASDF support with system dependencies |
+| **1password** | 30 | 1Password app settings and preferences |
 | **applications** | 30 | App Store applications and application inventories |
+| **postman** | 35 | Postman API testing tool settings, collections, and environments |
 | **docker** | 35 | Docker Desktop settings, containers, images, and volumes |
 | **vscode** | 40 | Visual Studio Code settings, extensions, and keybindings |
+| **sublime_text** | 40 | Sublime Text editor settings, packages, and user preferences |
 | **jetbrains** | 45 | JetBrains IDE configurations, settings, and applications |
+| **android_studio** | 45 | Android Studio IDE settings, projects, and SDK configurations |
 | **tableplus** | 45 | TablePlus database connections, themes, and preferences |
 | **chrome** | 50 | Google Chrome bookmarks, extensions, and preferences |
+| **xcode** | 50 | Xcode IDE settings, preferences, and developer configurations |
 | **brave** | 51 | Brave Browser bookmarks, Brave Rewards, and settings |
 | **arc** | 52 | Arc Browser spaces, sidebar configuration, and bookmarks |
 | **vivaldi** | 53 | Vivaldi Browser workspaces, notes, and UI customizations |

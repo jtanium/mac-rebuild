@@ -1,5 +1,45 @@
 # Changelog
 
+## [v2.3.1] - 2025-09-12
+
+### Added
+- **1Password Plugin**: Comprehensive backup and restore support for 1Password password manager
+  - Backs up 1Password app settings, preferences, and group containers
+  - Preserves application containers and preference files
+  - Secure handling with vault data exclusion for security reasons
+  - Automatic 1Password installation via Homebrew during restore
+  - Supports both 1Password 7 and newer versions
+- **Android Studio Plugin**: Complete development environment backup for Android Studio
+  - Backs up Android Studio IDE settings, preferences, and project configurations
+  - Preserves SDK configurations and gradle settings
+  - Creates inventory of installed SDK packages for reference
+  - Supports Android SDK path detection and backup
+  - Automatic Android Studio installation via Homebrew during restore
+- **Postman Plugin**: API development tool backup and restore support
+  - Backs up Postman settings, collections, and environments
+  - Preserves application support data and preferences
+  - Handles local collections while noting cloud-synced collections
+  - Automatic Postman installation via Homebrew during restore
+- **Sublime Text Plugin**: Text editor configuration backup for Sublime Text
+  - Supports both Sublime Text 3 and Sublime Text 4
+  - Backs up user settings, Package Control configurations, and code snippets
+  - Preserves custom themes, key bindings, and license information
+  - Package Control automatic package installation on restore
+  - Automatic Sublime Text installation via Homebrew during restore
+- **Xcode Plugin**: Complete iOS/macOS development environment backup
+  - Backs up Xcode IDE settings, preferences, and developer configurations
+  - Preserves user data, code snippets, key bindings, and custom themes
+  - Handles breakpoints, simulator preferences, and provisioning profiles
+  - Creates inventory of installed simulator runtimes for reference
+  - Comprehensive coverage of all Xcode user customizations
+
+### Changed
+- Updated plugin count in README from 14 to 19 core plugins
+- Enhanced plugin priority system to accommodate new development tools
+
+### Fixed
+-
+
 ## [v2.3.0] - 2025-09-12
 
 ### Added
