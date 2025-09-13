@@ -1,5 +1,16 @@
 # Changelog
 
+## [v2.3.0] - 2025-09-12
+
+### Added
+- Browser plugins for common browsers
+
+### Changed
+-
+
+### Fixed
+-
+
 ## [v2.2.8] - 2025-09-11
 
 ### Added
