@@ -1,6 +1,6 @@
 # Changelog
 
-## [v2.3.1] - 2025-09-12
+## [v2.4.0] - 2025-09-12
 
 ### Added
 - **1Password Plugin**: Comprehensive backup and restore support for 1Password password manager
