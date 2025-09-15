@@ -1,5 +1,16 @@
 # Changelog
 
+## [v2.4.2] - 2025-09-15
+
+### Added
+-
+
+### Changed
+-
+
+### Fixed
+- Path issues for OMZ and ASDF plugins
+
 ## [v2.4.1] - 2025-09-12
 
 ### Added
