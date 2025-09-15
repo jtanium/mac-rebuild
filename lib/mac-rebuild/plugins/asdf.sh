@@ -26,7 +26,138 @@ asdf_has_detection() {
 }
 
 asdf_detect() {
-    command -v asdf &> /dev/null
+    command -v asdf &> /dev/null || [ -f "$HOME/.asdf/bin/asdf" ]
+}
+
+# New function to detect ASDF installation path
+asdf_detect_installation_path() {
+    # Check for Git clone installation
+    if [ -f "$HOME/.asdf/asdf.sh" ] && [ -f "$HOME/.asdf/bin/asdf" ]; then
+        echo "git:$HOME/.asdf/asdf.sh"
+        return 0
+    fi
+
+    # Check for Homebrew installations (both Intel and Apple Silicon)
+    if [ -f "/opt/homebrew/opt/asdf/libexec/asdf.sh" ]; then
+        echo "homebrew:/opt/homebrew/opt/asdf/libexec/asdf.sh"
+        return 0
+    fi
+
+    if [ -f "/usr/local/opt/asdf/libexec/asdf.sh" ]; then
+        echo "homebrew:/usr/local/opt/asdf/libexec/asdf.sh"
+        return 0
+    fi
+
+    # Check if asdf command exists and try to find its path
+    if command -v asdf &> /dev/null; then
+        local asdf_bin=$(which asdf)
+        local asdf_dir=$(dirname "$(dirname "$asdf_bin")")
+        if [ -f "$asdf_dir/asdf.sh" ]; then
+            echo "other:$asdf_dir/asdf.sh"
+            return 0
+        fi
+    fi
+
+    return 1
+}
+
+# New function to fix ASDF paths in shell configuration files
+asdf_fix_shell_paths() {
+    local correct_path="$1"
+    local method="$2"
+
+    log "Fixing ASDF paths in shell configuration files..."
+
+    # List of shell configuration files to check
+    local shell_files=(
+        "$HOME/.zshrc"
+        "$HOME/.bashrc"
+        "$HOME/.bash_profile"
+        "$HOME/.profile"
+        "$HOME/.zprofile"
+    )
+
+    # Common ASDF path patterns to replace
+    local old_patterns=(
+        ". /opt/homebrew/opt/asdf/libexec/asdf.sh"
+        ". /usr/local/opt/asdf/libexec/asdf.sh"
+        ". \$HOME/.asdf/asdf.sh"
+        ". ~/.asdf/asdf.sh"
+        "source /opt/homebrew/opt/asdf/libexec/asdf.sh"
+        "source /usr/local/opt/asdf/libexec/asdf.sh"
+        "source \$HOME/.asdf/asdf.sh"
+        "source ~/.asdf/asdf.sh"
+        ". \$ASDF_DIR/asdf.sh"
+    )
+
+    for shell_file in "${shell_files[@]}"; do
+        if [ -f "$shell_file" ]; then
+            echo "Checking $shell_file..."
+            local file_modified=false
+
+            # Create a temporary file for modifications
+            local temp_file=$(mktemp)
+            cp "$shell_file" "$temp_file"
+
+            # Check for and replace old ASDF patterns
+            for pattern in "${old_patterns[@]}"; do
+                if grep -Fq "$pattern" "$shell_file"; then
+                    echo "  Found old ASDF path: $pattern"
+                    # Remove the old pattern
+                    sed -i.bak "/$(echo "$pattern" | sed 's/[[\.*^$()+?{|]/\\&/g')/d" "$temp_file"
+                    file_modified=true
+                fi
+            done
+
+            # Also remove any ASDF_DIR exports if we're switching methods
+            if [ "$method" = "homebrew" ] && grep -q "export ASDF_DIR=" "$shell_file"; then
+                echo "  Removing ASDF_DIR export (not needed for Homebrew installation)"
+                sed -i.bak '/export ASDF_DIR=/d' "$temp_file"
+                file_modified=true
+            fi
+
+            # Add the correct configuration
+            local needs_config=true
+            if [ "$method" = "git" ]; then
+                # Check if correct Git clone config already exists
+                if grep -Fq "export ASDF_DIR=\$HOME/.asdf" "$temp_file" && grep -Fq ". \$ASDF_DIR/asdf.sh" "$temp_file"; then
+                    needs_config=false
+                elif grep -Fq ". ~/.asdf/asdf.sh" "$temp_file"; then
+                    needs_config=false
+                fi
+
+                if [ "$needs_config" = true ]; then
+                    echo "  Adding correct Git clone ASDF configuration"
+                    echo "" >> "$temp_file"
+                    echo "# ASDF Configuration" >> "$temp_file"
+                    echo "export ASDF_DIR=\$HOME/.asdf" >> "$temp_file"
+                    echo ". \$ASDF_DIR/asdf.sh" >> "$temp_file"
+                    file_modified=true
+                fi
+            else
+                # Homebrew method
+                if ! grep -Fq ". $correct_path" "$temp_file"; then
+                    echo "  Adding correct Homebrew ASDF configuration"
+                    echo "" >> "$temp_file"
+                    echo "# ASDF Configuration" >> "$temp_file"
+                    echo ". $correct_path" >> "$temp_file"
+                    file_modified=true
+                fi
+            fi
+
+            # Apply changes if file was modified
+            if [ "$file_modified" = true ]; then
+                mv "$temp_file" "$shell_file"
+                echo "  ✅ Updated $shell_file"
+            else
+                rm "$temp_file"
+                echo "  ✅ $shell_file already correct"
+            fi
+
+            # Clean up backup files
+            [ -f "$shell_file.bak" ] && rm "$shell_file.bak"
+        fi
+    done
 }
 
 asdf_backup() {
@@ -118,27 +249,45 @@ asdf_restore() {
         return 0
     fi
 
-    # Install ASDF if not present
-    if ! asdf_detect; then
-        echo "Installing ASDF..."
-        brew install asdf
+    # First, detect existing ASDF installation
+    local asdf_path_info
+    asdf_path_info=$(asdf_detect_installation_path)
 
-        # Add ASDF to shell configuration only if not already present
-        local asdf_init_line=". $HOMEBREW_PREFIX/opt/asdf/libexec/asdf.sh"
-        if [ -f ~/.zshrc ] && ! grep -Fq "$asdf_init_line" ~/.zshrc; then
-            echo "$asdf_init_line" >> ~/.zshrc
-        elif [ ! -f ~/.zshrc ]; then
-            # Create .zshrc if it doesn't exist
-            echo "$asdf_init_line" > ~/.zshrc
-        fi
+    local install_method=""
+    local asdf_script_path=""
+
+    if [ -n "$asdf_path_info" ]; then
+        # ASDF is already installed, extract method and path
+        install_method=$(echo "$asdf_path_info" | cut -d':' -f1)
+        asdf_script_path=$(echo "$asdf_path_info" | cut -d':' -f2)
+        echo "✅ ASDF already installed via $install_method method at: $asdf_script_path"
+
+        # Fix any incorrect paths in shell configuration files
+        asdf_fix_shell_paths "$asdf_script_path" "$install_method"
 
         # Source ASDF for current session
-        . "$HOMEBREW_PREFIX/opt/asdf/libexec/asdf.sh"
-        echo "✅ ASDF installed and configured"
+        if [ "$install_method" = "git" ]; then
+            export ASDF_DIR="$HOME/.asdf"
+            . "$HOME/.asdf/asdf.sh"
+        else
+            . "$asdf_script_path"
+        fi
+
     else
-        # Make sure ASDF is available in current session
-        . "$HOMEBREW_PREFIX/opt/asdf/libexec/asdf.sh" 2>/dev/null || true
-        echo "✅ ASDF already installed"
+        # ASDF not found, install it via Homebrew
+        echo "Installing ASDF via Homebrew..."
+        brew install asdf
+
+        install_method="homebrew"
+        asdf_script_path="$HOMEBREW_PREFIX/opt/asdf/libexec/asdf.sh"
+
+        # Fix shell configuration files
+        asdf_fix_shell_paths "$asdf_script_path" "$install_method"
+
+        # Source ASDF for current session
+        . "$asdf_script_path"
+
+        echo "✅ ASDF installed and configured via Homebrew"
     fi
 
     # Install system dependencies
@@ -280,7 +429,7 @@ asdf_restore_versions() {
         echo "This may take a very long time as runtimes are compiled from source..."
         echo "You can safely interrupt and run 'asdf install' manually later if needed."
 
-        cd "$HOME"
+        cd "$HOME" || return 1
 
         # Read .tool-versions and install each tool individually
         while IFS= read -r line; do

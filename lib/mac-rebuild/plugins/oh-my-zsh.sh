@@ -146,6 +146,22 @@ oh_my_zsh_restore() {
 
 oh_my_zsh_show_restore_summary() {
     local backup_dir="$1"
+    # Detect the best zsh installation path
+    local zsh_path
+    zsh_path=$(oh_my_zsh_detect_zsh_path)
+
+    if [ -z "$zsh_path" ]; then
+        echo "⚠️  No zsh installation found. Installing zsh via Homebrew..."
+        brew install zsh || handle_error "zsh installation" "Could not install zsh"
+        zsh_path=$(oh_my_zsh_detect_zsh_path)
+        if [ -z "$zsh_path" ]; then
+            handle_error "zsh detection" "Could not find zsh after installation"
+            return 1
+        fi
+    fi
+
+    echo "✅ Using zsh at: $zsh_path"
+
 
     echo ""
     echo "📋 Oh My Zsh Restore Summary:"
